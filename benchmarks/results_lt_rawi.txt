@@ -1,0 +1,5 @@
+FULL test.txt benchmark — 817035 sentences in 17.0 min (803/s, 12 workers)
+
+model           DER(all)  DER*(mk)      WER       chars       words
+------------------------------------------------------------------
+libtashkeel+rawi    4.12%    3.59%  16.22%    49440772    10262193
