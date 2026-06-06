@@ -1,0 +1,59 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "text2tashkeel"
+version = "0.1.0"
+description = "Lightweight Arabic diacritization (tashkeel) — a model picker over bundled ONNX models, no PyTorch, no network"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{ name = "JarbasAi", email = "jarbasai@mailfence.com" }]
+maintainers = [{ name = "TigreGotico" }]
+keywords = ["arabic", "diacritization", "tashkeel", "harakat", "nlp", "onnx", "tts", "g2p"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Text Processing :: Linguistic",
+    "Natural Language :: Arabic",
+]
+dependencies = [
+    "numpy>=1.24",
+    "onnxruntime>=1.16",
+]
+
+[project.optional-dependencies]
+hf = ["huggingface_hub>=0.20"]
+test = ["pytest>=7.0", "huggingface_hub>=0.20"]
+bench = ["datasets>=2.0", "matplotlib>=3.5", "huggingface_hub>=0.20"]
+dev = ["pytest>=7.0", "datasets>=2.0", "matplotlib>=3.5", "huggingface_hub>=0.20"]
+
+[project.urls]
+Homepage = "https://github.com/TigreGotico/text2tashkeel"
+Repository = "https://github.com/TigreGotico/text2tashkeel"
+Issues = "https://github.com/TigreGotico/text2tashkeel/issues"
+
+[project.scripts]
+text2tashkeel = "text2tashkeel.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["text2tashkeel*"]
+
+[tool.setuptools.package-data]
+# Bundle only the INT8 models and the stitched flagship (plus the small vocab/maps
+# JSON). fp32 weights are fetched from Hugging Face on first use (extra: [hf]).
+text2tashkeel = ["models/*.int8.onnx", "models/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

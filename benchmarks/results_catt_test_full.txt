@@ -1,0 +1,7 @@
+FULL test.txt — per-Arabic-letter metric — 2168 sentences, 7 min
+model           DER(all)  DER*(mk)      WER   skipped
+------------------------------------------------------
+catt-eo           0.39%    0.44%  65.96%         0
+rawi-v2           3.11%    3.52%   7.81%         0
+bilstm            1.84%    2.12%   4.65%         0
+libtashkeel       7.11%    7.60%  17.44%         0

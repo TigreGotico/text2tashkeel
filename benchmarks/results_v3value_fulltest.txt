@@ -1,0 +1,7 @@
+v2-gate experiment — 817035 sentences in 75.8 min
+
+model                 DER(all)  DER*(mk)      WER
+--------------------------------------------------
+rawi-v2+rawi-int8       2.20%    3.21%   8.04%
+rawi-v2+rawi-v3         2.03%    2.93%   7.47%
+rawi-v2-int8+rawi-v3-int8    2.04%    2.94%   7.51%

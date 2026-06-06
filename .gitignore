@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+build/
+dist/
+.venv/
+# never track per workspace rules
+TODO.md
+ROADMAP.md
+# local build artifacts (regenerate via tools/)
+ensemble_bilstm_rawi.onnx
+onnx_models/
+
+# CATT test data (regenerate via benchmarks/filter_catt_test.py)
+benchmarks/catt_test_*.txt
