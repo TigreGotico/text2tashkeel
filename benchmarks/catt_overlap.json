@@ -1,0 +1,18 @@
+{
+  "our_test_unique": 815016,
+  "our_train_unique": 2361408,
+  "catt_train_lines": 1723143,
+  "catt_train_unique": 1508837,
+  "catt_test_unique": 2500,
+  "catt_val_unique": 2500,
+  "our_test_in_catt_train_unique": 41531,
+  "our_test_in_catt_train_pct": 5.095728182023421,
+  "our_test_in_our_train_unique": 13710,
+  "our_test_in_our_train_pct": 1.6821755646514915,
+  "our_train_in_catt_train_unique": 117607,
+  "our_train_in_catt_train_pct": 4.980376114589262,
+  "catt_test_in_our_train": 1806,
+  "catt_test_in_our_test": 679,
+  "catt_test_in_our_train_pct": 72.24,
+  "catt_val_in_our_train": 1877
+}

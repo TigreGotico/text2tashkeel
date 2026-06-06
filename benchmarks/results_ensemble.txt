@@ -1,0 +1,7 @@
+FULL test.txt benchmark — 817035 sentences in 108.8 min (125/s, 12 workers)
+
+model           DER(all)  DER*(mk)      WER       chars       words
+------------------------------------------------------------------
+ensemble          3.99%    3.13%  15.79%    49440772    10262193
+bilstm+rawi       4.38%    4.17%  16.72%    49440772    10262193
+bilstm            4.95%    5.08%  18.02%    49440772    10262193
