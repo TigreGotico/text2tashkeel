@@ -32,6 +32,7 @@ __all__ = [
     "DEFAULT_MODEL", "BUNDLED", "__version__",
     # per-model wrapper classes (syntactic sugar)
     "Bilstm", "BilstmInt8", "Rawi", "RawiInt8", "RawiV2", "RawiV2Int8", "RawiV3", "RawiV3Int8", "Libtashkeel",
+    "Shakkala", "ShakkalaInt8", "Catt", "CattInt8",
     "BilstmRawi", "BilstmRawiInt8", "LibtashkeelRawi", "LibtashkeelRawiInt8",
     "BilstmInt8RawiInt8", "BilstmLibtashkeelRawi", "BilstmLibtashkeelRawiInt8",
     "RawiV2Rawi", "RawiV2RawiInt8", "RawiV2Int8RawiInt8", "RawiV2RawiV3", "RawiV2Int8RawiV3Int8",
@@ -144,6 +145,31 @@ class Libtashkeel(Diacritizer):
     """mush42/libtashkeel char+hint encoder. Smallest good single — DER 6.89%."""
     def __init__(self, providers=None) -> None:
         super().__init__("libtashkeel", providers)
+
+
+# third-party baselines (weights fetched from Hugging Face on first use)
+class Shakkala(Diacritizer):
+    """Barqawiz/Shakkala v3 (fixed 315-length, 3× BiLSTM). DER ~5.65%."""
+    def __init__(self, providers=None) -> None:
+        super().__init__("shakkala", providers)
+
+
+class ShakkalaInt8(Diacritizer):
+    """INT8 Shakkala v3."""
+    def __init__(self, providers=None) -> None:
+        super().__init__("shakkala-int8", providers)
+
+
+class Catt(Diacritizer):
+    """abjadai/CATT encoder-only transformer, stitched to one ONNX. DER ~4.27%."""
+    def __init__(self, providers=None) -> None:
+        super().__init__("catt", providers)
+
+
+class CattInt8(Diacritizer):
+    """INT8 CATT-EO — 21.6 MB, fits the embeddable tier."""
+    def __init__(self, providers=None) -> None:
+        super().__init__("catt-int8", providers)
 
 
 # gated ensembles (gate decides WHERE, value decides WHICH mark)

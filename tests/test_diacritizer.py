@@ -22,6 +22,7 @@ def test_available_models():
     assert MODELS == [
         "bilstm", "bilstm-int8", "rawi", "rawi-int8", "rawi-v2", "rawi-v2-int8", "rawi-v3", "rawi-v3-int8",
         "libtashkeel",
+        "shakkala", "shakkala-int8", "catt", "catt-int8",
         "bilstm+rawi", "bilstm+rawi-int8",
         "libtashkeel+rawi", "libtashkeel+rawi-int8", "bilstm-int8+rawi-int8",
         "bilstm+libtashkeel+rawi", "bilstm+libtashkeel+rawi-int8",
@@ -141,6 +142,8 @@ _WRAPPERS = {
     tt.RawiInt8: "rawi-int8", tt.RawiV2: "rawi-v2", tt.RawiV2Int8: "rawi-v2-int8",
     tt.RawiV3: "rawi-v3", tt.RawiV3Int8: "rawi-v3-int8",
     tt.Libtashkeel: "libtashkeel",
+    tt.Shakkala: "shakkala", tt.ShakkalaInt8: "shakkala-int8",
+    tt.Catt: "catt", tt.CattInt8: "catt-int8",
     tt.BilstmRawi: "bilstm+rawi", tt.BilstmRawiInt8: "bilstm+rawi-int8",
     tt.LibtashkeelRawi: "libtashkeel+rawi",
     tt.LibtashkeelRawiInt8: "libtashkeel+rawi-int8",
