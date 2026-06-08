@@ -35,25 +35,26 @@ over a character embedding. Keep that in mind for §12.4.
 
 ## 12.2 The constrained leaderboard
 
-All neural models scored with the **same DER metric** on the **same 2,000-sentence
-sample** of the held-out split; latency is single-thread ms/sentence on ~58-char
-input. Mishkal is rule-based and scored only where it preserves the consonant
-skeleton (see note). Romanized example for each row is the same sentence
-`العلم نور والجهل ظلام` ("knowledge is light and ignorance is darkness").
+Scored with the **same DER metric** on the **held-out test split**. Bundled models
+(`rawi`, `bilstm`, `libtashkeel`) use the full 817k-sentence run from
+[§10](10-benchmark-report.md); Shakkelha and Shakkala were run over the 813,993
+sentences under 314 characters (Shakkala's fixed-length limit); Mishkal, rule-based, is
+scored on a 30k sample over the ~52 % of sentences where it preserves the consonant
+skeleton. Latency is single-thread ms/sentence on ~58-char input.
 
 **In-tier rows are sorted by accuracy.** "In tier?" applies the ≤ 25 MB **and**
 ≤ 20 ms rule.
 
 | Model | DER ↓ | DER\* ↓ | WER ↓ | latency ↓ | size | in tier? |
 |-------|------:|-------:|------:|----------:|-----:|:--------:|
-| **`rawi-ensemble`** 🏆 | **1.99%** | 2.93% | 7.16% | 1.6 ms | 4.9 MB | ✅ |
-| **`rawi-v2-int8`** ⭐ | 2.27% | 3.40% | 8.11% | **0.79 ms** | **2.5 MB** | ✅ |
+| **`rawi-ensemble`** 🏆 | **2.04%** | 2.94% | 7.51% | ~2 ms | 4.9 MB | ✅ |
+| **`rawi-v2-int8`** ⭐ | 2.30% | 3.39% | 8.36% | **~1 ms** | **2.5 MB** | ✅ |
 | CATT | 4.27%² | — | — | ~14–20 ms | 21.6 MB | ✅ (edge) |
-| Shakkelha (RNN, big/avg20) | 4.52% | 4.21% | 16.28% | ~1 ms¹ | ~2.5 MB¹ | ✅ |
-| `bilstm` | 4.82% | 4.92% | 17.63% | 3.0 ms | 17.9 MB | ✅ |
-| `libtashkeel` | 6.97% | 7.94% | 24.58% | 3.0 ms | 4.8 MB | ✅ |
-| Mishkal | ~18.8%³ | 25.5% | 57.4% | 15 ms | — | ✅ (rule) |
-| Shakkala v3 | 5.65% | 6.20% | 20.49% | **254 ms** | 10.2 MB | ✗ (latency) |
+| Shakkelha (RNN, big/avg20) | 4.75% | 4.51% | 17.07% | ~1 ms¹ | ~2.5 MB¹ | ✅ |
+| `bilstm` | 4.95% | 5.08% | 18.02% | 6.5 ms | 17.9 MB | ✅ |
+| `libtashkeel` | 6.89% | 7.80% | 24.56% | 3.3 ms | 4.8 MB | ✅ |
+| Mishkal | 19.08%³ | 26.00% | 58.86% | 22 ms | — | ✅ (rule) |
+| Shakkala v3 | 5.90% | 6.51% | 21.22% | **254 ms** | 10.2 MB | ✗ (latency) |
 
 ¹ Shakkelha's RNN is architecturally rawi-v2's twin (2× BiLSTM-256); its
 accuracy is measured from the reference model, and an int8 ONNX of that network
@@ -65,8 +66,8 @@ unaligned number is far worse.
 
 **The result:** **everything except Shakkala fits the embeddable tier** — so the tier
 isn't a trick that excludes the competition. Within it, rawi is **~2× more accurate
-than the next-best model** (`rawi-ensemble` 1.99% vs CATT 4.27%), and `rawi-v2-int8`
-delivers near-that accuracy at **0.79 ms / 2.5 MB**. The only thing close to rawi on
+than the next-best model** (`rawi-ensemble` 2.04% vs CATT 4.27%), and `rawi-v2-int8`
+delivers near-that accuracy at **~1 ms / 2.5 MB**. The only thing close to rawi on
 accuracy (CATT) sits at the tier's size/latency *edge* and slips further on broad
 data ([§8.2](08-models-and-benchmarks.md)). Shakkala is excluded purely on latency
 (254 ms — see §12.3). So rawi is not just "fast and small"; it is **the most accurate
@@ -75,7 +76,7 @@ diacritizer that an on-device voice pipeline can actually run.**
 ## 12.3 It's the inference *shape*, not the parameter count
 
 Shakkala v3 and rawi-v2 have **almost identical parameter counts** (2.5 M vs 2.4 M),
-yet Shakkala is ~160× slower (254 ms vs 0.79 ms). Latency is set by the **shape of
+yet Shakkala is **~250× slower** (254 ms vs ~1 ms). Latency is set by the **shape of
 the computation**, not the weight count:
 
 | | Shakkala v3 | rawi-v2 |
@@ -95,8 +96,8 @@ what buy the millisecond.
 
 Shakkelha's RNN is the most informative comparison because it is **the same network
 as rawi-v2** — two BiLSTM-256 layers over a character embedding — trained by other
-authors on other data. On the same test it scores **4.52% DER; rawi-v2 scores
-2.27%**. Same architecture, ~2× the accuracy.
+authors on other data. On the same test it scores **4.75% DER; rawi-v2 scores
+2.30%**. Same architecture, ~2× the accuracy.
 
 That isolates *where rawi's quality comes from*: not a cleverer network, but the
 **corpus and the task framing** — the NFD label scheme that also restores hamza and
@@ -114,6 +115,18 @@ it, a plain BiLSTM trained on the right corpus with the right label scheme is th
 most accurate option measured here, by roughly 2×. That is the niche
 `text2tashkeel` targets: the **most accurate embeddable diacritizer**, not the best
 diacritizer at any cost.
+
+## 12.6 Out of tier, for completeness
+
+**Autoregressive** systems decode left-to-right with search — accurate, but far slower
+than a single-pass tagger, so they fall outside the embeddable tier and aren't
+benchmarked above. CATT's encoder-*decoder* variant is one; AppTek's **2SDiac**
+([Bahar et al., *Take the Hint*, Interspeech 2023](https://arxiv.org/abs/2306.03557))
+is another — it adds *hint-based* diacritization, reading partially-diacritized input
+to improve its output, an idea close to the where/which split in
+[§9](09-combining-models.md). These set the accuracy ceiling when latency and size are
+unconstrained; the tier question is what survives the ~20 ms / 25 MB budget, which they
+do not.
 
 ---
 
