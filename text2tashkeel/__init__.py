@@ -32,7 +32,7 @@ __all__ = [
     "DEFAULT_MODEL", "BUNDLED", "__version__",
     # per-model wrapper classes (syntactic sugar)
     "Bilstm", "BilstmInt8", "Rawi", "RawiInt8", "RawiV2", "RawiV2Int8", "RawiV3", "RawiV3Int8", "Libtashkeel",
-    "Shakkala", "ShakkalaInt8", "Catt", "CattInt8",
+    "Shakkala", "ShakkalaInt8", "Catt", "CattInt8", "CattED", "CattEDInt8",
     "BilstmRawi", "BilstmRawiInt8", "LibtashkeelRawi", "LibtashkeelRawiInt8",
     "BilstmInt8RawiInt8", "BilstmLibtashkeelRawi", "BilstmLibtashkeelRawiInt8",
     "RawiV2Rawi", "RawiV2RawiInt8", "RawiV2Int8RawiInt8", "RawiV2RawiV3", "RawiV2Int8RawiV3Int8",
@@ -170,6 +170,18 @@ class CattInt8(Diacritizer):
     """INT8 CATT-EO — 21.6 MB, fits the embeddable tier."""
     def __init__(self, providers=None) -> None:
         super().__init__("catt-int8", providers)
+
+
+class CattED(Diacritizer):
+    """CATT encoder-decoder — autoregressive, out of tier (slow); for completeness."""
+    def __init__(self, providers=None) -> None:
+        super().__init__("catt-ed", providers)
+
+
+class CattEDInt8(Diacritizer):
+    """INT8 CATT encoder-decoder."""
+    def __init__(self, providers=None) -> None:
+        super().__init__("catt-ed-int8", providers)
 
 
 # gated ensembles (gate decides WHERE, value decides WHICH mark)

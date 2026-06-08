@@ -47,6 +47,10 @@ _HF_SOURCES = {
     "shakkala.out_vocab.json":("TigreGotico/shakkala-diacritizer", "output_int_to_vocab.json"),
     "catt.onnx":              ("TigreGotico/catt-diacritizer",     "catt_eo.onnx"),
     "catt.int8.onnx":         ("TigreGotico/catt-diacritizer",     "catt_eo.int8.onnx"),
+    "catt_ed_encoder.onnx":        ("TigreGotico/catt-diacritizer", "catt_ed_encoder.onnx"),
+    "catt_ed_encoder.int8.onnx":   ("TigreGotico/catt-diacritizer", "catt_ed_encoder.int8.onnx"),
+    "catt_ed_decoder.onnx":        ("TigreGotico/catt-diacritizer", "catt_ed_decoder.onnx"),
+    "catt_ed_decoder.int8.onnx":   ("TigreGotico/catt-diacritizer", "catt_ed_decoder.int8.onnx"),
 }
 
 
@@ -533,6 +537,53 @@ class _CattBackend:
         return self.tok.decode([input_ids], [pred])[0]
 
 
+# ── CATT encoder-decoder (autoregressive, out of tier) ───────────────────────
+class _CattEDBackend:
+    """CATT's encoder-*decoder* variant — autoregressive (the decoder is run once per
+    output position, feeding back its own tags with a causal mask), so it ships as two
+    ONNX (encoder + decoder), not a stitched single graph, and is far slower than the
+    encoder-only `catt`. Provided for completeness. See TigreGotico/catt-diacritizer."""
+
+    _RUN = _CattBackend._RUN
+
+    def __init__(self, encoder_path: Path, decoder_path: Path, providers=None) -> None:
+        from text2tashkeel._vendor.catt import TashkeelTokenizer
+        self.tok = TashkeelTokenizer()
+        self.src_pad = self.tok.letters_map["<PAD>"]
+        self.trg_pad = self.tok.tashkeel_map["<PAD>"]
+        self.bos = self.tok.tashkeel_map["<BOS>"]
+        self.space = self.tok.letters_map[" "]
+        self.nt = self.tok.tashkeel_map[self.tok.no_tashkeel_tag]
+        self.enc = _session(encoder_path, providers)
+        self.dec = _session(decoder_path, providers)
+
+    @staticmethod
+    def _pad_mask(q, k, qp, kp):
+        return (q != qp)[:, None, :, None] & (k != kp)[:, None, None, :]
+
+    def diacritize(self, text: str) -> str:
+        return self._RUN.sub(lambda m: self._diac_run(m.group(0)), text)
+
+    def _diac_run(self, s: str) -> str:
+        s = _strip(s)
+        if not s.strip():
+            return s
+        input_ids, _ = self.tok.encode(s, test_match=False)
+        src = input_ids[None, :].astype(np.int64)
+        enc_src = self.enc.run(None, {"src": src,
+                                      "src_mask": self._pad_mask(src, src, self.src_pad, self.src_pad)})[0]
+        trg = np.array([[self.bos]], dtype=np.int64)
+        for _ in range(src.shape[1] - 1):
+            causal = np.tril(np.ones((trg.shape[1], trg.shape[1]))).astype(bool)
+            trg_mask = self._pad_mask(trg, trg, self.trg_pad, self.trg_pad) & causal
+            src_trg_mask = self._pad_mask(trg, src, self.trg_pad, self.src_pad)
+            preds = self.dec.run(None, {"trg": trg, "enc_src": enc_src,
+                                        "trg_mask": trg_mask, "src_trg_mask": src_trg_mask})[0]
+            trg = np.concatenate([trg, preds[:, -1, :].argmax(-1)[:, None]], axis=1)
+            trg[src[:, :trg.shape[1]] == self.space] = self.nt
+        return self.tok.decode([input_ids], [trg[0]])[0]
+
+
 # ── registry ───────────────────────────────────────────────────────────────
 _REGISTRY = {
     "bilstm": lambda p: _BilstmBackend(_model_path("bilstm.onnx"), p),
@@ -574,6 +625,11 @@ _REGISTRY = {
     ),
     "catt": lambda p: _CattBackend(_model_path("catt.onnx"), p),
     "catt-int8": lambda p: _CattBackend(_model_path("catt.int8.onnx"), p),
+    # CATT encoder-decoder — autoregressive, out of tier, two ONNX (slow)
+    "catt-ed": lambda p: _CattEDBackend(
+        _model_path("catt_ed_encoder.onnx"), _model_path("catt_ed_decoder.onnx"), p),
+    "catt-ed-int8": lambda p: _CattEDBackend(
+        _model_path("catt_ed_encoder.int8.onnx"), _model_path("catt_ed_decoder.int8.onnx"), p),
     # ── agreement-gated ensembles ──────────────────────────────────────────
     # Naming: `gate(+gate…)+value` — the LAST model is the value (decides WHICH
     # mark); the preceding model(s) are gates (decide WHERE, OR-combined).
@@ -627,6 +683,8 @@ _ARCHS = {
     "libtashkeel": lambda onnx, vocab, thr, p: _LibtashkeelBackend(onnx, vocab, p),
     "stitched": lambda onnx, vocab, thr, p: _StitchedEnsembleBackend(onnx, vocab, p),
     "catt": lambda onnx, vocab, thr, p: _CattBackend(onnx, p),
+    # catt-ed: onnx = encoder path, vocab = decoder path
+    "catt-ed": lambda onnx, vocab, thr, p: _CattEDBackend(onnx, vocab, p),
     # for shakkala, `vocab` is a directory holding input_vocab_to_int.json +
     # output_int_to_vocab.json
     "shakkala": lambda onnx, vocab, thr, p: _ShakkalaBackend(
