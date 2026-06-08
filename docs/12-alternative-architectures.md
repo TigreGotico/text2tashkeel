@@ -49,7 +49,7 @@ skeleton. Latency is single-thread ms/sentence on ~58-char input.
 |-------|------:|-------:|------:|----------:|-----:|:--------:|
 | **`rawi-ensemble`** 🏆 | **2.04%** | 2.94% | 7.51% | ~2 ms | 4.9 MB | ✅ |
 | **`rawi-v2-int8`** ⭐ | 2.30% | 3.39% | 8.36% | **~1 ms** | **2.5 MB** | ✅ |
-| CATT | 4.27%² | — | — | ~14–20 ms | 21.6 MB | ✅ (edge) |
+| CATT | 4.74%² | 2.99% | 28.45%⁴ | ~14–20 ms | 21.6 MB | ✅ (edge) |
 | Shakkelha (RNN, big/avg20) | 4.75% | 4.51% | 17.07% | ~1 ms¹ | ~2.5 MB¹ | ✅ |
 | `bilstm` | 4.95% | 5.08% | 18.02% | 6.5 ms | 17.9 MB | ✅ |
 | `libtashkeel` | 6.89% | 7.80% | 24.56% | 3.3 ms | 4.8 MB | ✅ |
@@ -62,11 +62,13 @@ sizes/times like rawi-v2. ² CATT on this broad test; it scores far lower on its
 narrow benchmark — distribution dominates ([§8.2](08-models-and-benchmarks.md)).
 ³ Mishkal rewrites the consonant skeleton on ~half of sentences (so those can't be
 char-aligned for scoring); the figure is the alignable subset, and the raw,
-unaligned number is far worse.
+unaligned number is far worse. ⁴ CATT normalizes its output (drops the dagger-alef and
+non-Arabic), so its **WER is inflated** under a strict word metric; all rows are scored
+on Arabic letters only, where its DER\*/DER are competitive.
 
 **The result:** **everything except Shakkala fits the embeddable tier** — so the tier
 isn't a trick that excludes the competition. Within it, rawi is **~2× more accurate
-than the next-best model** (`rawi-ensemble` 2.04% vs CATT 4.27%), and `rawi-v2-int8`
+than the next-best model** (`rawi-ensemble` 2.04% vs CATT 4.74%), and `rawi-v2-int8`
 delivers near-that accuracy at **~1 ms / 2.5 MB**. The only thing close to rawi on
 accuracy (CATT) sits at the tier's size/latency *edge* and slips further on broad
 data ([§8.2](08-models-and-benchmarks.md)). Shakkala is excluded purely on latency

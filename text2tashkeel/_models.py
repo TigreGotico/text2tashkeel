@@ -522,17 +522,14 @@ class _CattBackend:
         if not s.strip():
             return s
         input_ids, _ = self.tok.encode(s, test_match=False)
-        src = input_ids[None, :].astype(np.int64)                      # (1, T)
+        core = input_ids[1:-1]                                         # drop <BOS>/<EOS> before the model
+        src = core[None, :].astype(np.int64)                          # (1, T)
         keep = src != self.pad
         src_mask = keep[:, None, :, None] & keep[:, None, None, :]     # (1, 1, T, T)
         logits = self.sess.run(None, {"src": src, "src_mask": src_mask})[0][0]
         pred = logits.argmax(-1)
-        pred[src[0] == self.space] = self.nt
-        # encode() wraps the sequence in <BOS>/<EOS>; the model doesn't always emit
-        # those tags at the boundary positions, so pin them so decode()'s value-based
-        # filter drops exactly the boundaries (otherwise the marks shift by one).
-        pred[0] = self.tok.tashkeel_map["<BOS>"]
-        pred[-1] = self.tok.tashkeel_map["<EOS>"]
+        pred[core == self.space] = self.nt
+        # decode() takes the BOS/EOS-wrapped ids for the letters and the per-letter tags
         return self.tok.decode([input_ids], [pred])[0]
 
 
