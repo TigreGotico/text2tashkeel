@@ -49,7 +49,7 @@ skeleton. Latency is single-thread ms/sentence on ~58-char input.
 |-------|------:|-------:|------:|----------:|-----:|:--------:|
 | **`rawi-ensemble`** 🏆 | **2.04%** | 2.94% | 7.51% | ~2 ms | 4.9 MB | ✅ |
 | **`rawi-v2-int8`** ⭐ | 2.30% | 3.39% | 8.36% | **~1 ms** | **2.5 MB** | ✅ |
-| CATT | 4.74%² | 2.99% | 28.45%⁴ | ~14–20 ms | 21.6 MB | ✅ (edge) |
+| CATT (EO, int8) | 4.38%² | 2.62% | 32.54%⁴ | ~14–20 ms | 21.6 MB | ✅ (edge) |
 | Shakkelha (RNN, big/avg20) | 4.75% | 4.51% | 17.07% | ~1 ms¹ | ~2.5 MB¹ | ✅ |
 | `bilstm` | 4.95% | 5.08% | 18.02% | 6.5 ms | 17.9 MB | ✅ |
 | `libtashkeel` | 6.89% | 7.80% | 24.56% | 3.3 ms | 4.8 MB | ✅ |
@@ -58,8 +58,11 @@ skeleton. Latency is single-thread ms/sentence on ~58-char input.
 
 ¹ Shakkelha's RNN is architecturally rawi-v2's twin (2× BiLSTM-256); its
 accuracy is measured from the reference model, and an int8 ONNX of that network
-sizes/times like rawi-v2. ² CATT on this broad test; it scores far lower on its own
-narrow benchmark — distribution dominates ([§8.2](08-models-and-benchmarks.md)).
+sizes/times like rawi-v2. ² CATT on this broad test (it scores far lower on its own
+narrow benchmark — distribution dominates, [§8.2](08-models-and-benchmarks.md)); full
+817,924-sentence run of the int8 ONNX, excluding the ~885 sentences (0.1%) where CATT
+drops non-Arabic and the output can't be char-aligned. int8 ≈ fp32 here (fp32 EO is
+4.27% / 2.49%).
 ³ Mishkal rewrites the consonant skeleton on ~half of sentences (so those can't be
 char-aligned for scoring); the figure is the alignable subset, and the raw,
 unaligned number is far worse. ⁴ CATT normalizes its output (drops the dagger-alef and
@@ -68,7 +71,7 @@ on Arabic letters only, where its DER\*/DER are competitive.
 
 **The result:** **everything except Shakkala fits the embeddable tier** — so the tier
 isn't a trick that excludes the competition. Within it, rawi is **~2× more accurate
-than the next-best model** (`rawi-ensemble` 2.04% vs CATT 4.74%), and `rawi-v2-int8`
+than the next-best model** (`rawi-ensemble` 2.04% vs CATT 4.38%), and `rawi-v2-int8`
 delivers near-that accuracy at **~1 ms / 2.5 MB**. The only thing close to rawi on
 accuracy (CATT) sits at the tier's size/latency *edge* and slips further on broad
 data ([§8.2](08-models-and-benchmarks.md)). Shakkala is excluded purely on latency
@@ -120,10 +123,13 @@ diacritizer at any cost.
 
 ## 12.6 Out of tier, for completeness
 
-**Autoregressive** systems decode left-to-right with search — accurate, but far slower
-than a single-pass tagger, so they fall outside the embeddable tier and aren't
-benchmarked above. CATT's encoder-*decoder* variant is one; AppTek's **2SDiac**
-([Bahar et al., *Take the Hint*, Interspeech 2023](https://arxiv.org/abs/2306.03557))
+**Autoregressive** systems decode left-to-right, recomputing per step — accurate, but
+far slower than a single-pass tagger, so they fall outside the embeddable tier.
+**CATT's encoder-decoder (`catt-ed`)** is one: on the full test it scores **4.31% DER /
+2.51% DER\*** — slightly better than the in-tier encoder-only CATT (4.38%), as expected
+for the stronger variant, but it is autoregressive (one decoder pass per output
+character) and ships as two ONNX, so it can't be stitched and is out of tier. AppTek's
+**2SDiac** ([Bahar et al., *Take the Hint*, Interspeech 2023](https://arxiv.org/abs/2306.03557))
 is another — it adds *hint-based* diacritization, reading partially-diacritized input
 to improve its output, an idea close to the where/which split in
 [§9](09-combining-models.md). These set the accuracy ceiling when latency and size are
