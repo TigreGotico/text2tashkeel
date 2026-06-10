@@ -13,5 +13,5 @@ jobs:
       python_version: '3.11'
       coverage_source: 'text2tashkeel'
       test_path: 'tests/'
-      install_extras: 'test'
+      install_extras: '.[test]'
       min_coverage: 0
