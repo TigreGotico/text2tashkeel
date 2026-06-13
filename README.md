@@ -91,4 +91,8 @@ text2tashkeel -m rawi-v2-int8 < input.txt > output.txt
 
 ## Benchmarks
 
-Measured DER/WER for every model across the corpus's train/test/val splits is in [`benchmarks/`](benchmarks/README.md). 
+Measured DER/WER for every model across the corpus's train/test/val splits is in [`benchmarks/`](benchmarks/README.md).
+
+## Credits & Funding
+
+Developed by [TigreGotico](https://tigregotico.pt) for [OpenVoiceOS](https://openvoiceos.org), funded by the [NGI0 Commons Fund](https://nlnet.nl/commonsfund/) — a fund established by [NLnet](https://nlnet.nl) with financial support from the European Commission's [Next Generation Internet](https://ngi.eu) programme (grant agreement No 101135429).
