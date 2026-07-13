@@ -25,11 +25,12 @@ from functools import lru_cache
 from ._models import (
     DEFAULT_MODEL, BUNDLED, available_models, build_backend, register_model,
 )
+from .waqf import pausal
 from .version import __version__
 
 __all__ = [
     "Diacritizer", "diacritize", "available_models", "register_model",
-    "DEFAULT_MODEL", "BUNDLED", "__version__",
+    "pausal", "DEFAULT_MODEL", "BUNDLED", "__version__",
     # per-model wrapper classes (syntactic sugar)
     "Bilstm", "BilstmInt8", "Rawi", "RawiInt8", "RawiV2", "RawiV2Int8", "RawiV3", "RawiV3Int8", "Libtashkeel",
     "BilstmRawi", "BilstmRawiInt8", "LibtashkeelRawi", "LibtashkeelRawiInt8",
@@ -47,16 +48,26 @@ class Diacritizer:
             (default ``"rawi-ensemble"`` — the flagship, 2.04% DER, single 4.9 MB ONNX).
         providers: onnxruntime execution providers
             (default ``["CPUExecutionProvider"]``).
+        waqf: drop the case/mood endings (iʿrāb) from the result, leaving the
+            pausal form that is spoken. The models restore the *full* endings,
+            which is right for a pedagogical text and stilted for speech; a TTS
+            frontend almost always wants ``waqf=True``.
 
     The onnxruntime session is built lazily on first use, so constructing a
     ``Diacritizer`` is cheap. Process **one sentence per call** — see
     docs/04-inference-pipeline.md on why padded batching is unsafe.
     """
 
-    def __init__(self, model: str = DEFAULT_MODEL, providers=None) -> None:
+    def __init__(
+        self,
+        model: str = DEFAULT_MODEL,
+        providers=None,
+        waqf: bool = False,
+    ) -> None:
         if model not in available_models():
             raise ValueError(f"unknown model {model!r}; choose from {available_models()}")
         self.model = model
+        self.waqf = waqf
         self._providers = providers
         self._backend = None
 
@@ -67,8 +78,14 @@ class Diacritizer:
         return self._backend
 
     def diacritize(self, text: str) -> str:
-        """Return ``text`` with predicted diacritics applied."""
-        return self.backend.diacritize(text)
+        """Return ``text`` with predicted diacritics applied.
+
+        With ``waqf=True`` the case and mood endings are then dropped, giving
+        the pausal form that is actually spoken rather than the fully-parsed
+        form the models restore — see :mod:`text2tashkeel.waqf`.
+        """
+        out = self.backend.diacritize(text)
+        return pausal(out) if self.waqf else out
 
     __call__ = diacritize
 
@@ -78,9 +95,14 @@ def _default(model: str) -> Diacritizer:
     return Diacritizer(model)
 
 
-def diacritize(text: str, model: str = DEFAULT_MODEL) -> str:
-    """Diacritize using a shared default model (convenience wrapper)."""
-    return _default(model).diacritize(text)
+def diacritize(text: str, model: str = DEFAULT_MODEL, waqf: bool = False) -> str:
+    """Diacritize using a shared default model (convenience wrapper).
+
+    ``waqf=True`` returns the spoken (pausal) form — see
+    :mod:`text2tashkeel.waqf`.
+    """
+    out = _default(model).diacritize(text)
+    return pausal(out) if waqf else out
 
 
 # ── Per-model wrapper classes ───────────────────────────────────────────────
