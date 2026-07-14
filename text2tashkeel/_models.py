@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import unicodedata
 from functools import lru_cache
 from pathlib import Path
@@ -39,6 +40,17 @@ _HF_SOURCES = {
     "rawi_ensemble.onnx": ("TigreGotico/rawi-ensemble",         "rawi_ensemble.onnx"),
     "bilstm.onnx":        ("TigreGotico/bilstm-diacritizer",     "bilstm.onnx"),
     "libtashkeel.onnx":   ("TigreGotico/libtashkeel-diacritizer", "libtashkeel.onnx"),
+    # third-party baselines (re-exported, not bundled — fetched on first use)
+    "shakkala.onnx":          ("TigreGotico/shakkala-diacritizer", "shakkala_v3.onnx"),
+    "shakkala.int8.onnx":     ("TigreGotico/shakkala-diacritizer", "shakkala_v3.int8.onnx"),
+    "shakkala.in_vocab.json": ("TigreGotico/shakkala-diacritizer", "input_vocab_to_int.json"),
+    "shakkala.out_vocab.json":("TigreGotico/shakkala-diacritizer", "output_int_to_vocab.json"),
+    "catt.onnx":              ("TigreGotico/catt-diacritizer",     "catt_eo.onnx"),
+    "catt.int8.onnx":         ("TigreGotico/catt-diacritizer",     "catt_eo.int8.onnx"),
+    "catt_ed_encoder.onnx":        ("TigreGotico/catt-diacritizer", "catt_ed_encoder.onnx"),
+    "catt_ed_encoder.int8.onnx":   ("TigreGotico/catt-diacritizer", "catt_ed_encoder.int8.onnx"),
+    "catt_ed_decoder.onnx":        ("TigreGotico/catt-diacritizer", "catt_ed_decoder.onnx"),
+    "catt_ed_decoder.int8.onnx":   ("TigreGotico/catt-diacritizer", "catt_ed_decoder.int8.onnx"),
 }
 
 
@@ -456,6 +468,122 @@ class _StitchedEnsembleBackend:
         return unicodedata.normalize("NFC", out)
 
 
+# ── shakkala (third-party baseline) ──────────────────────────────────────────
+class _ShakkalaBackend:
+    """Ahmad Barqawi's Shakkala v3, re-exported to ONNX (MIT). Fixed 315-length: the
+    input is char-id-padded to 315 and the model emits one of 28 harakat classes per
+    position. Input longer than 315 characters is diacritized up to the limit and the
+    tail returned bare. See TigreGotico/shakkala-diacritizer."""
+
+    _MAXLEN = 315
+
+    def __init__(self, onnx_path: Path, in_vocab_path, out_vocab_path, providers=None) -> None:
+        self.i2v = json.loads(Path(in_vocab_path).read_text(encoding="utf-8"))
+        out = json.loads(Path(out_vocab_path).read_text(encoding="utf-8"))
+        self.o2v = {int(k): v for k, v in out.items()}
+        self.unk = self.i2v["<UNK>"]
+        self.sess = _session(onnx_path, providers)
+
+    def diacritize(self, text: str) -> str:
+        s = _strip(text)
+        if not s:
+            return text
+        n = min(len(s), self._MAXLEN)
+        ids = [self.i2v.get(c, self.unk) for c in s[:n]] + [0] * (self._MAXLEN - n)
+        name = self.sess.get_inputs()[0].name
+        logits = self.sess.run(None, {name: np.array([ids], dtype=np.float32)})[0][0]
+        har = [self.o2v[int(a)] for a in logits.argmax(-1) if self.o2v[int(a)] != "<PAD>"]
+        har += [""] * (n - len(har))
+        out = "".join(c + ("" if h in ("<UNK>", "ـ") else h) for c, h in zip(s[:n], har))
+        return unicodedata.normalize("NFC", out + s[n:])
+
+
+# ── CATT (third-party baseline) ──────────────────────────────────────────────
+class _CattBackend:
+    """Abjad AI's encoder-only CATT (Apache-2.0), with the transformer encoder and its
+    non-autoregressive classifier head stitched into one ONNX. Buckwalter-tokenized;
+    emits one of 18 tashkeel tags per character. The tokenizer is vendored
+    (``text2tashkeel._vendor.catt``). See TigreGotico/catt-diacritizer."""
+
+    # one or more Arabic words (with internal whitespace) — non-Arabic spans
+    # (Latin, digits, punctuation) are left untouched.
+    _AR = r"؀-ۿݐ-ݿﭐ-﷿ﹰ-﻿"
+    _RUN = re.compile(rf"[{_AR}]+(?:\s+[{_AR}]+)*")
+
+    def __init__(self, onnx_path: Path, providers=None) -> None:
+        from text2tashkeel._vendor.catt import TashkeelTokenizer
+        self.tok = TashkeelTokenizer()
+        self.pad = self.tok.letters_map["<PAD>"]
+        self.space = self.tok.letters_map[" "]
+        self.nt = self.tok.tashkeel_map[self.tok.no_tashkeel_tag]
+        self.sess = _session(onnx_path, providers)
+
+    def diacritize(self, text: str) -> str:
+        return self._RUN.sub(lambda m: self._diac_run(m.group(0)), text)
+
+    def _diac_run(self, s: str) -> str:
+        s = _strip(s)
+        if not s.strip():
+            return s
+        input_ids, _ = self.tok.encode(s, test_match=False)
+        core = input_ids[1:-1]                                         # drop <BOS>/<EOS> before the model
+        src = core[None, :].astype(np.int64)                          # (1, T)
+        keep = src != self.pad
+        src_mask = keep[:, None, :, None] & keep[:, None, None, :]     # (1, 1, T, T)
+        logits = self.sess.run(None, {"src": src, "src_mask": src_mask})[0][0]
+        pred = logits.argmax(-1)
+        pred[core == self.space] = self.nt
+        # decode() takes the BOS/EOS-wrapped ids for the letters and the per-letter tags
+        return self.tok.decode([input_ids], [pred])[0]
+
+
+# ── CATT encoder-decoder (autoregressive, out of tier) ───────────────────────
+class _CattEDBackend:
+    """CATT's encoder-*decoder* variant — autoregressive (the decoder is run once per
+    output position, feeding back its own tags with a causal mask), so it ships as two
+    ONNX (encoder + decoder), not a stitched single graph, and is far slower than the
+    encoder-only `catt`. Provided for completeness. See TigreGotico/catt-diacritizer."""
+
+    _RUN = _CattBackend._RUN
+
+    def __init__(self, encoder_path: Path, decoder_path: Path, providers=None) -> None:
+        from text2tashkeel._vendor.catt import TashkeelTokenizer
+        self.tok = TashkeelTokenizer()
+        self.src_pad = self.tok.letters_map["<PAD>"]
+        self.trg_pad = self.tok.tashkeel_map["<PAD>"]
+        self.bos = self.tok.tashkeel_map["<BOS>"]
+        self.space = self.tok.letters_map[" "]
+        self.nt = self.tok.tashkeel_map[self.tok.no_tashkeel_tag]
+        self.enc = _session(encoder_path, providers)
+        self.dec = _session(decoder_path, providers)
+
+    @staticmethod
+    def _pad_mask(q, k, qp, kp):
+        return (q != qp)[:, None, :, None] & (k != kp)[:, None, None, :]
+
+    def diacritize(self, text: str) -> str:
+        return self._RUN.sub(lambda m: self._diac_run(m.group(0)), text)
+
+    def _diac_run(self, s: str) -> str:
+        s = _strip(s)
+        if not s.strip():
+            return s
+        input_ids, _ = self.tok.encode(s, test_match=False)
+        src = input_ids[None, :].astype(np.int64)
+        enc_src = self.enc.run(None, {"src": src,
+                                      "src_mask": self._pad_mask(src, src, self.src_pad, self.src_pad)})[0]
+        trg = np.array([[self.bos]], dtype=np.int64)
+        for _ in range(src.shape[1] - 1):
+            causal = np.tril(np.ones((trg.shape[1], trg.shape[1]))).astype(bool)
+            trg_mask = self._pad_mask(trg, trg, self.trg_pad, self.trg_pad) & causal
+            src_trg_mask = self._pad_mask(trg, src, self.trg_pad, self.src_pad)
+            preds = self.dec.run(None, {"trg": trg, "enc_src": enc_src,
+                                        "trg_mask": trg_mask, "src_trg_mask": src_trg_mask})[0]
+            trg = np.concatenate([trg, preds[:, -1, :].argmax(-1)[:, None]], axis=1)
+            trg[src[:, :trg.shape[1]] == self.space] = self.nt
+        return self.tok.decode([input_ids], [trg[0]])[0]
+
+
 # ── registry ───────────────────────────────────────────────────────────────
 _REGISTRY = {
     "bilstm": lambda p: _BilstmBackend(_model_path("bilstm.onnx"), p),
@@ -486,6 +614,22 @@ _REGISTRY = {
     "libtashkeel": lambda p: _LibtashkeelBackend(
         _model_path("libtashkeel.onnx"), _model_path("libtashkeel.maps.json"), p
     ),
+    # ── third-party baselines (fetched from HF, not bundled) ────────────────
+    "shakkala": lambda p: _ShakkalaBackend(
+        _model_path("shakkala.onnx"), _model_path("shakkala.in_vocab.json"),
+        _model_path("shakkala.out_vocab.json"), p
+    ),
+    "shakkala-int8": lambda p: _ShakkalaBackend(
+        _model_path("shakkala.int8.onnx"), _model_path("shakkala.in_vocab.json"),
+        _model_path("shakkala.out_vocab.json"), p
+    ),
+    "catt": lambda p: _CattBackend(_model_path("catt.onnx"), p),
+    "catt-int8": lambda p: _CattBackend(_model_path("catt.int8.onnx"), p),
+    # CATT encoder-decoder — autoregressive, out of tier, two ONNX (slow)
+    "catt-ed": lambda p: _CattEDBackend(
+        _model_path("catt_ed_encoder.onnx"), _model_path("catt_ed_decoder.onnx"), p),
+    "catt-ed-int8": lambda p: _CattEDBackend(
+        _model_path("catt_ed_encoder.int8.onnx"), _model_path("catt_ed_decoder.int8.onnx"), p),
     # ── agreement-gated ensembles ──────────────────────────────────────────
     # Naming: `gate(+gate…)+value` — the LAST model is the value (decides WHICH
     # mark); the preceding model(s) are gates (decide WHERE, OR-combined).
@@ -538,6 +682,15 @@ _ARCHS = {
     "bilstm": lambda onnx, vocab, thr, p: _BilstmBackend(onnx, p),
     "libtashkeel": lambda onnx, vocab, thr, p: _LibtashkeelBackend(onnx, vocab, p),
     "stitched": lambda onnx, vocab, thr, p: _StitchedEnsembleBackend(onnx, vocab, p),
+    "catt": lambda onnx, vocab, thr, p: _CattBackend(onnx, p),
+    # catt-ed: onnx = encoder path, vocab = decoder path
+    "catt-ed": lambda onnx, vocab, thr, p: _CattEDBackend(onnx, vocab, p),
+    # for shakkala, `vocab` is a directory holding input_vocab_to_int.json +
+    # output_int_to_vocab.json
+    "shakkala": lambda onnx, vocab, thr, p: _ShakkalaBackend(
+        onnx, str(Path(vocab) / "input_vocab_to_int.json"),
+        str(Path(vocab) / "output_int_to_vocab.json"), p
+    ),
 }
 
 
@@ -560,7 +713,10 @@ def register_model(name: str, onnx_path, vocab_path=None, *, arch: str = "rawi",
             for ``rawi``/``rawi-v3``/``stitched``; maps JSON for ``libtashkeel``).
             Not needed for ``bilstm`` (its vocab is inlined).
         arch: which decode to use — ``"rawi"`` (single head), ``"rawi-v3"`` /
-            ``"two-head"``, ``"stitched"``, ``"bilstm"``, or ``"libtashkeel"``.
+            ``"two-head"``, ``"stitched"``, ``"bilstm"``, ``"libtashkeel"``,
+            ``"catt"`` (Buckwalter transformer; ``vocab_path`` ignored), or
+            ``"shakkala"`` (``vocab_path`` = a directory holding
+            ``input_vocab_to_int.json`` + ``output_int_to_vocab.json``).
         threshold: presence threshold for two-head models.
 
     Example::

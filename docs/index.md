@@ -49,6 +49,7 @@ vocab, labels, and normalization.
 | 9 | [Combining models](09-combining-models.md) | How gated ensembles split *where* a mark goes from *which* mark it is — and how the flagship combines two models with no retraining. |
 | 10 | [Full benchmark report](10-benchmark-report.md) | All models on the full test set — accuracy vs **latency** vs size, with Pareto plots. The voice-pipeline picker. |
 | 11 | [What makes rawi different](11-what-makes-rawi-different.md) | rawi's distinctive features — a wider task (restores hamza/dagger-alef) and a where/which factorization, not a fancy network. |
+| 12 | [Alternative architectures](12-alternative-architectures.md) | How rawi compares to other diacritizers (attention RNNs, transformers, rule engines) within the **embeddable tier** (≤ 25 MB, ≤ 20 ms) — and why it's the inference shape, not the parameter count, that decides speed. |
 
 ## Try it in 30 seconds
 
