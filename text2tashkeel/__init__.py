@@ -52,6 +52,24 @@ class Diacritizer:
             pausal form that is spoken. The models restore the *full* endings,
             which is right for a pedagogical text and stilted for speech; a TTS
             frontend almost always wants ``waqf=True``.
+        preserve_orthography: forbid the model from changing a letter the writing
+            already spells. These models normalize to NFD and treat the hamza as
+            a *mark on a bare alif*, so 29 of their classes carry a hamza or a
+            madda — which means they can, and do, rewrite ⟨آ⟩ as ⟨أ⟩ and destroy
+            the long /aː/ it stands for (آبد /ʔaːbid/ → أَبْد /ʔabd/; 6.5% of a
+            17.5k-word WikiPron sweep). The offending classes are masked out
+            *before* the argmax, so the model picks the best reading the writing
+            permits. On by default: this is correctness, not preference. See
+            :mod:`text2tashkeel.orthography`.
+        respect_existing: never overwrite a mark a human already wrote. Partial
+            vocalization is common — a text marks the words it thinks are
+            ambiguous — and each of those marks is a person telling us the
+            answer. Unconstrained, كِتَاب comes back as كَتَاب. On by default.
+        allow_restoration: let the model ADD a hamza to a letter that carries
+            none — the defective-spelling fix (bare ⟨ا⟩ typed for ⟨أ⟩) these
+            models are built to do. This is why the rule is asymmetric: dropping
+            a written mark is always wrong, adding one to a silent letter is the
+            job. On by default.
 
     The onnxruntime session is built lazily on first use, so constructing a
     ``Diacritizer`` is cheap. Process **one sentence per call** — see
@@ -63,19 +81,67 @@ class Diacritizer:
         model: str = DEFAULT_MODEL,
         providers=None,
         waqf: bool = False,
+        preserve_orthography: bool = True,
+        respect_existing: bool = True,
+        allow_restoration: bool = True,
     ) -> None:
         if model not in available_models():
             raise ValueError(f"unknown model {model!r}; choose from {available_models()}")
         self.model = model
         self.waqf = waqf
+        self.preserve_orthography = preserve_orthography
+        self.respect_existing = respect_existing
+        self.allow_restoration = allow_restoration
         self._providers = providers
         self._backend = None
 
     @property
     def backend(self):
         if self._backend is None:
-            self._backend = build_backend(self.model, self._providers)
+            self._backend = build_backend(
+                self.model, self._providers,
+                preserve_orthography=self.preserve_orthography,
+                respect_existing=self.respect_existing,
+                allow_restoration=self.allow_restoration,
+            )
         return self._backend
+
+    def logits(self, text: str):
+        """The raw per-character class distribution, before any decision.
+
+        Returns ``(bare, logits, classes)`` — the NFD base characters the model
+        actually saw, a ``[len(bare), n_classes]`` array, and the diacritic
+        string each class stands for. ``bare`` is empty and ``logits`` is
+        ``None`` when there is nothing to mark.
+
+        This is for a caller that **knows something the model does not**: that
+        this alif is written with a madda and not a hamza, that this letter
+        already carries a human's fatḥa, that a variety's orthography does not
+        admit some mark sequence at all. Such a caller can mask the classes that
+        contradict what it knows and take the argmax of what remains — which is
+        strictly better than correcting the output afterwards, because a masked
+        class can never be chosen in the first place.
+
+        Only the single-head architectures (``rawi``, ``rawi-v2``) expose this;
+        anything else raises :class:`NotImplementedError`.
+        """
+        backend = self.backend
+        if not hasattr(backend, "_logits"):
+            raise NotImplementedError(
+                f"model {self.model!r} does not expose per-class logits; "
+                f"use a single-head rawi model (rawi, rawi-v2, + INT8 variants)"
+            )
+        bare, logits = backend._logits(text)
+        return bare, logits, backend.classes
+
+    def decode(self, bare: str, classes_per_char) -> str:
+        """Recompose *bare* with one class id per character — the counterpart to
+        :meth:`logits`, so a caller that masked and re-argmaxed can render the
+        result the same way the model would have."""
+        backend = self.backend
+        if not hasattr(backend, "decode"):
+            raise NotImplementedError(f"model {self.model!r} cannot decode class ids")
+        return backend.decode(bare, classes_per_char)
 
     def diacritize(self, text: str) -> str:
         """Return ``text`` with predicted diacritics applied.

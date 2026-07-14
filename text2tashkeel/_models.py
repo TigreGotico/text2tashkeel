@@ -151,6 +151,9 @@ class _BilstmBackend:
 
 
 # ── rawi ───────────────────────────────────────────────────────────────────
+from text2tashkeel.orthography import ORTHOGRAPHIC_MARKS as _ORTHO_MARKS
+
+
 class _RawiBackend:
     """Port of rawi's notebook decode. Key quirks vs the others:
 
@@ -163,12 +166,21 @@ class _RawiBackend:
       preserved untouched.
     """
 
-    def __init__(self, onnx_path: Path, vocab_path: Path, providers=None) -> None:
+    def __init__(self, onnx_path: Path, vocab_path: Path, providers=None,
+                 preserve_orthography: bool = True,
+                 respect_existing: bool = True,
+                 allow_restoration: bool = True) -> None:
         v = json.loads(Path(vocab_path).read_text(encoding="utf-8"))
         self.c2i = dict(v["char_to_idx"])
         self.i2d = {i: s for s, i in dict(v["diac_to_idx"]).items()}
         self.unk = self.c2i.get("<UNK>", 1)
         self.sess = _session(onnx_path, providers)
+        # Constrained decoding — see text2tashkeel/orthography.py. The classes
+        # that contradict the text are removed BEFORE the argmax, so a letter
+        # cannot be rewritten and a human's marks cannot be overwritten.
+        self.preserve_orthography = preserve_orthography
+        self.respect_existing = respect_existing
+        self.allow_restoration = allow_restoration
 
     @staticmethod
     def _normalize(text: str) -> str:
@@ -177,15 +189,82 @@ class _RawiBackend:
             if unicodedata.category(c) != "So"
         )
 
-    def _predict(self, text: str):
-        """Return (bare_chars, predicted_class_per_char) on the NFD base seq."""
+    def _logits(self, text: str):
+        """Return (bare_chars, logits[T, C]) on the NFD base sequence.
+
+        The raw distribution, before any decision is taken. A caller that knows
+        something the model does not — that this alif is written with a madda,
+        that this letter already carries a human's fatḥa — can mask the classes
+        that contradict it and take the argmax of what remains. That is a
+        different and strictly better thing than correcting the model's output
+        after the fact, because a masked class can never be chosen at all.
+        """
         bare = "".join(
             c for c in self._normalize(text) if unicodedata.category(c) != "Mn"
         )
         if not bare:
             return bare, None
         ids = np.array([[self.c2i.get(c, self.unk) for c in bare]], dtype=np.int64)
-        return bare, self.sess.run(["output"], {"input": ids})[0][0].argmax(-1)
+        return bare, self.sess.run(["output"], {"input": ids})[0][0]
+
+    def _predict(self, text: str):
+        """Return (bare_chars, predicted_class_per_char) on the NFD base seq.
+
+        Unconstrained this is a plain argmax. With the orthography constraints on
+        (the default) the classes that contradict the source are masked out first,
+        so the model chooses the best reading that the *writing permits* rather
+        than the best reading full stop.
+        """
+        bare, logits = self._logits(text)
+        if logits is None:
+            return bare, None
+        if not (self.preserve_orthography or self.respect_existing):
+            return bare, logits.argmax(-1)
+        return bare, self._constrained_argmax(text, bare, logits)
+
+    def _constrained_argmax(self, text: str, bare: str, logits):
+        from text2tashkeel.orthography import (
+            allowed_classes, pinned_class, source_marks,
+        )
+        src_bare, src_marks = source_marks(text, self._normalize)
+        if src_bare != bare or len(src_marks) != len(bare):
+            # The decompositions disagree, so a mask built from one cannot be
+            # trusted against the other. Decide unconstrained rather than guess.
+            return logits.argmax(-1)
+
+        classes = self.classes
+        out = np.empty(len(bare), dtype=np.int64)
+        for i, ch in enumerate(bare):
+            if not unicodedata.category(ch).startswith("L"):
+                out[i] = 0
+                continue
+            marks = src_marks[i]
+            if self.respect_existing and (marks - _ORTHO_MARKS):
+                # The writing already says it. Pin to exactly what is written.
+                pin = pinned_class(classes, marks)
+                if pin >= 0:
+                    out[i] = pin
+                    continue
+            if self.preserve_orthography:
+                allowed = allowed_classes(classes, marks, self.allow_restoration)
+            else:
+                allowed = range(len(classes))
+            row = logits[i]
+            out[i] = max(allowed, key=lambda j: row[j]) if allowed else 0
+        return out
+
+    @property
+    def classes(self):
+        """The diacritic class strings, indexed by class id."""
+        return [self.i2d[i] for i in range(len(self.i2d))]
+
+    def decode(self, bare: str, pred) -> str:
+        """Recompose *bare* with one predicted class per character."""
+        out = "".join(
+            ch + (self.i2d[int(p)] if unicodedata.category(ch).startswith("L") else "")
+            for ch, p in zip(bare, pred)
+        )
+        return unicodedata.normalize("NFC", out)
 
     def mark_mask(self, text: str) -> np.ndarray:
         """Per base char: True where this position gets a mark (class != 0).
@@ -199,11 +278,7 @@ class _RawiBackend:
         bare, pred = self._predict(text)
         if not bare:
             return text
-        out = "".join(
-            ch + (self.i2d[int(p)] if unicodedata.category(ch).startswith("L") else "")
-            for ch, p in zip(bare, pred)
-        )
-        return unicodedata.normalize("NFC", out)
+        return self.decode(bare, pred)
 
 
 # ── rawi V3 (two-head gated) ─────────────────────────────────────────────────
@@ -433,12 +508,22 @@ class _StitchedEnsembleBackend:
     identical to the `rawi-v2+rawi-v3` Python ensemble. Input = NFD-bare char ids;
     output `gated_cls` = one diacritic-class id per position (0 = no mark)."""
 
-    def __init__(self, onnx_path: Path, vocab_path: Path, providers=None) -> None:
+    def __init__(self, onnx_path: Path, vocab_path: Path, providers=None,
+                 preserve_orthography: bool = True,
+                 respect_existing: bool = True,
+                 allow_restoration: bool = True) -> None:
         v = json.loads(Path(vocab_path).read_text(encoding="utf-8"))
         self.c2i = dict(v["char_to_idx"])
         self.i2d = {i: s for s, i in dict(v["diac_to_idx"]).items()}
         self.unk = self.c2i.get("<UNK>", 1)
         self.sess = _session(onnx_path, providers)
+        self.preserve_orthography = preserve_orthography
+        self.respect_existing = respect_existing
+        self.allow_restoration = allow_restoration
+
+    @property
+    def classes(self):
+        return [self.i2d[i] for i in range(len(self.i2d))]
 
     def diacritize(self, text: str) -> str:
         bare = "".join(
@@ -448,7 +533,32 @@ class _StitchedEnsembleBackend:
         if not bare:
             return text
         ids = np.array([[self.c2i.get(c, self.unk) for c in bare]], dtype=np.int64)
-        cls = self.sess.run(["gated_cls"], {"input": ids})[0][0]
+        cls = list(self.sess.run(["gated_cls"], {"input": ids})[0][0])
+
+        # The gating is folded into the graph, so there is no distribution left
+        # to mask — only a decision. A decision is still a class, though, and a
+        # class factors into the marks the writing fixed and the vowel the model
+        # was actually asked about. Keep the second, correct the first.
+        if self.preserve_orthography or self.respect_existing:
+            from text2tashkeel.orthography import (
+                ORTHOGRAPHIC_MARKS, pinned_class, project_class, source_marks,
+            )
+            src_bare, src_marks = source_marks(text, _RawiBackend._normalize)
+            if src_bare == bare and len(src_marks) == len(bare):
+                classes = self.classes
+                for i, ch in enumerate(bare):
+                    if not unicodedata.category(ch).startswith("L"):
+                        continue
+                    marks = src_marks[i]
+                    if self.respect_existing and (marks - ORTHOGRAPHIC_MARKS):
+                        pin = pinned_class(classes, marks)
+                        if pin >= 0:
+                            cls[i] = pin
+                            continue
+                    if self.preserve_orthography:
+                        cls[i] = project_class(
+                            classes, int(cls[i]), marks, self.allow_restoration)
+
         out = "".join(
             ch + (self.i2d[int(c)] if unicodedata.category(ch).startswith("L") else "")
             for ch, c in zip(bare, cls)
@@ -587,5 +697,43 @@ def _build(model: str, providers_key):
     return _REGISTRY[model](list(providers_key) if providers_key else None)
 
 
-def build_backend(model: str, providers=None):
-    return _build(model, tuple(providers) if providers else None)
+#: The orthography constraints, all on. This is the default because both are
+#: correctness, not preference: a model may not rewrite a letter the writing
+#: spells, and may not overwrite a mark a human wrote.
+_DEFAULT_CONSTRAINTS = (True, True, True)
+
+
+def _apply_constraints(backend, preserve_orthography, respect_existing,
+                       allow_restoration):
+    """Set the constraints on *backend* and on any backend it delegates to.
+
+    An ensemble's **value** model is the one that chooses the class, so setting
+    them there is what makes the ensemble honour them too — the constraint rides
+    with the decision, not with the wrapper.
+    """
+    for b in (backend, getattr(backend, "value", None), *getattr(backend, "gates", ())):
+        if b is None or not hasattr(b, "preserve_orthography"):
+            continue
+        b.preserve_orthography = preserve_orthography
+        b.respect_existing = respect_existing
+        b.allow_restoration = allow_restoration
+    return backend
+
+
+def build_backend(model: str, providers=None, *,
+                  preserve_orthography: bool = True,
+                  respect_existing: bool = True,
+                  allow_restoration: bool = True):
+    """Build (or fetch from cache) the backend for *model*.
+
+    Backends are cached and shared, so a caller asking for non-default
+    constraints gets a **fresh, unshared** instance — mutating a shared one would
+    silently change every other caller's decoder.
+    """
+    constraints = (preserve_orthography, respect_existing, allow_restoration)
+    if constraints == _DEFAULT_CONSTRAINTS:
+        return _build(model, tuple(providers) if providers else None)
+    if model not in _REGISTRY:
+        raise ValueError(f"unknown model {model!r}; choose from {available_models()}")
+    fresh = _REGISTRY[model](list(providers) if providers else None)
+    return _apply_constraints(fresh, *constraints)
