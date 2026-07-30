@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0a2](https://github.com/TigreGotico/text2tashkeel/tree/0.3.0a2) (2026-07-30)
+
+[Full Changelog](https://github.com/TigreGotico/text2tashkeel/compare/0.3.0a1...0.3.0a2)
+
+**Merged pull requests:**
+
+- docs: rewrite README in Simplified Technical English [\#11](https://github.com/TigreGotico/text2tashkeel/pull/11) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [0.3.0a1](https://github.com/TigreGotico/text2tashkeel/tree/0.3.0a1) (2026-07-14)
 
 [Full Changelog](https://github.com/TigreGotico/text2tashkeel/compare/0.2.0a1...0.3.0a1)
