@@ -23,16 +23,19 @@ for the reasons and the method.
 ## Install
 
 ```bash
-pip install text2tashkeel
+pip install --pre text2tashkeel
 ```
+
+The `--pre` flag installs the latest alpha. The stable release on PyPI is
+older and lacks the orthography constraints and `waqf`.
 
 The wheel is small (about 10 MB). It bundles the best models, and these work
 fully offline, with no downloads and no torch. The full-precision (fp32)
 variants are fetched from Hugging Face on first use, if you opt in:
 
 ```bash
-pip install text2tashkeel        # int8 + flagship, offline
-pip install text2tashkeel[hf]    # + auto-download fp32 models on demand
+pip install --pre text2tashkeel        # int8 + flagship, offline
+pip install --pre "text2tashkeel[hf]"  # + auto-download fp32 models on demand
 ```
 
 Without `[hf]`, asking for a non-bundled model raises a clear message with its

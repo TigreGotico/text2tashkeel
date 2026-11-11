@@ -5,13 +5,13 @@ from __future__ import annotations
 import argparse
 import sys
 
-from . import Diacritizer, available_models
+from . import DEFAULT_MODEL, Diacritizer, available_models
 
 
 def main() -> None:
     ap = argparse.ArgumentParser(prog="text2tashkeel", description="Arabic diacritizer")
     ap.add_argument("text", nargs="*", help="text to diacritize (else read stdin)")
-    ap.add_argument("-m", "--model", default="bilstm", choices=available_models())
+    ap.add_argument("-m", "--model", default=DEFAULT_MODEL, choices=available_models())
     ap.add_argument(
         "-w", "--waqf", action="store_true",
         help="drop the case/mood endings (iʿrāb), leaving the spoken pausal form",
