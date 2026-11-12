@@ -506,7 +506,8 @@ class _StitchedEnsembleBackend:
     rawi-v3's value head supplies WHICH, with the gating math folded in (see
     tools/build_ensemble_v2v3_onnx.py). One `session.run` instead of two — byte-
     identical to the `rawi-v2+rawi-v3` Python ensemble. Input = NFD-bare char ids;
-    output `gated_cls` = one diacritic-class id per position (0 = no mark)."""
+    output `gated_cls` = one diacritic-class id per position (0 = no mark), and
+    `gated_logits` = the distribution whose argmax is `gated_cls`."""
 
     def __init__(self, onnx_path: Path, vocab_path: Path, providers=None,
                  preserve_orthography: bool = True,
@@ -525,20 +526,49 @@ class _StitchedEnsembleBackend:
     def classes(self):
         return [self.i2d[i] for i in range(len(self.i2d))]
 
-    def diacritize(self, text: str) -> str:
+    def _ids(self, text: str):
+        """Return (bare_chars, input ids) on the NFD base sequence."""
         bare = "".join(
             c for c in _RawiBackend._normalize(text)
             if unicodedata.category(c) != "Mn"
         )
+        return bare, np.array([[self.c2i.get(c, self.unk) for c in bare]], dtype=np.int64)
+
+    def _logits(self, text: str):
+        """Return (bare_chars, logits[T, C]), unconstrained.
+
+        Each row is rawi-v3's value-head scores. Where the rawi-v2 gate marks
+        nothing, class 0 is lifted just above the row maximum, so the argmax of
+        a row is the ensemble's own decision.
+        """
+        if "gated_logits" not in {o.name for o in self.sess.get_outputs()}:
+            raise NotImplementedError(
+                "this stitched ONNX has no 'gated_logits' output; rebuild it with "
+                "tools/build_ensemble_v2v3_onnx.py"
+            )
+        bare, ids = self._ids(text)
+        if not bare:
+            return bare, None
+        return bare, self.sess.run(["gated_logits"], {"input": ids})[0][0]
+
+    def decode(self, bare: str, pred) -> str:
+        """Recompose *bare* with one predicted class per character."""
+        out = "".join(
+            ch + (self.i2d[int(p)] if unicodedata.category(ch).startswith("L") else "")
+            for ch, p in zip(bare, pred)
+        )
+        return unicodedata.normalize("NFC", out)
+
+    def diacritize(self, text: str) -> str:
+        bare, ids = self._ids(text)
         if not bare:
             return text
-        ids = np.array([[self.c2i.get(c, self.unk) for c in bare]], dtype=np.int64)
         cls = list(self.sess.run(["gated_cls"], {"input": ids})[0][0])
 
-        # The gating is folded into the graph, so there is no distribution left
-        # to mask — only a decision. A decision is still a class, though, and a
-        # class factors into the marks the writing fixed and the vowel the model
-        # was actually asked about. Keep the second, correct the first.
+        # The graph returns a decision, with the gating folded in. A decision is
+        # still a class, and a class factors into the marks the writing fixed and
+        # the vowel the model was actually asked about. Keep the second, correct
+        # the first.
         if self.preserve_orthography or self.respect_existing:
             from text2tashkeel.orthography import (
                 ORTHOGRAPHIC_MARKS, pinned_class, project_class, source_marks,
@@ -559,11 +589,7 @@ class _StitchedEnsembleBackend:
                         cls[i] = project_class(
                             classes, int(cls[i]), marks, self.allow_restoration)
 
-        out = "".join(
-            ch + (self.i2d[int(c)] if unicodedata.category(ch).startswith("L") else "")
-            for ch, c in zip(bare, cls)
-        )
-        return unicodedata.normalize("NFC", out)
+        return self.decode(bare, cls)
 
 
 # ── registry ───────────────────────────────────────────────────────────────

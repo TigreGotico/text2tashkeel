@@ -127,7 +127,7 @@ inference.
 The internal backend object for the chosen model. Its `.sess` attribute is
 the underlying `onnxruntime.InferenceSession`, useful for advanced needs
 such as raw logits or custom decoding. Each model has a different ONNX I/O
-signature (rawi: `input → output`, rawi-ensemble: `input → gated_cls`,
+signature (rawi: `input → output`, rawi-ensemble: `input → gated_cls, gated_logits`,
 `bilstm`: `input_ids → logits`, `libtashkeel`: three inputs). See
 [the inference page](04-inference-pipeline.md#42-the-onnx-contract) and
 `examples/06_raw_onnx.py`.

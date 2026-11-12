@@ -122,14 +122,18 @@ class Diacritizer:
         strictly better than correcting the output afterwards, because a masked
         class can never be chosen in the first place.
 
-        Only the single-head architectures (``rawi``, ``rawi-v2``) expose this;
-        anything else raises :class:`NotImplementedError`.
+        The single-head architectures (``rawi``, ``rawi-v2``) and the stitched
+        default ``rawi-ensemble`` expose this; anything else raises
+        :class:`NotImplementedError`. For ``rawi-ensemble`` each row holds
+        rawi-v3's value-head scores, with class 0 lifted above the row maximum
+        where the rawi-v2 gate marks nothing, so the argmax of a row is the
+        ensemble's own decision.
         """
         backend = self.backend
         if not hasattr(backend, "_logits"):
             raise NotImplementedError(
                 f"model {self.model!r} does not expose per-class logits; "
-                f"use a single-head rawi model (rawi, rawi-v2, + INT8 variants)"
+                f"use rawi-ensemble or a single-head rawi model (rawi, rawi-v2, + INT8 variants)"
             )
         bare, logits = backend._logits(text)
         return bare, logits, backend.classes

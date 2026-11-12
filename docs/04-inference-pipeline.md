@@ -31,7 +31,10 @@ return nfc(out)                                       # ⑤ recompose to NFC
 rawi, 15 for bilstm). There is one prediction per base character, so the
 alignment never drifts. The flagship `rawi-ensemble` follows the same shape
 with one extra wrinkle: its ONNX returns the already-gated class directly
-(output `gated_cls`), so step 3 is one `session.run` over the fused graph.
+(output `gated_cls`), so step 3 is one `session.run` over the fused graph. Its
+second output, `gated_logits`, is the distribution whose argmax is `gated_cls`:
+rawi-v3's value-head scores, with class 0 lifted above the row maximum where
+the rawi-v2 gate marks nothing. `Diacritizer.logits()` returns it.
 
 ## 4.2 The ONNX contract
 
@@ -42,7 +45,7 @@ in Python. The signatures differ slightly:
 |-------|-------|--------|
 | rawi (V1/V2) | `input` int64 `(batch, seq)` | `output` float32 `(batch, seq, C)` |
 | rawi-v3 | `input` | `presence (batch, seq)`, `value (batch, seq, 75)` |
-| rawi-ensemble | `input` | `gated_cls` int64 `(batch, seq)` |
+| rawi-ensemble | `input` | `gated_cls` int64 `(batch, seq)`, `gated_logits` float32 `(batch, seq, 75)` |
 | bilstm | `input_ids` | `logits` float32 `(batch, seq, 15)` |
 
 Both axes are dynamic, so any length works without re-exporting. Keeping the

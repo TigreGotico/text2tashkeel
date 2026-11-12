@@ -134,7 +134,8 @@ Same overall shape, different details:
   explicit ([§9](09-combining-models.md)).
 - `rawi-ensemble` (the default) fuses two rawi networks into one ONNX graph:
   rawi-v2 decides where, and rawi-v3's value head decides which. One input,
-  one `session.run`, output `gated_cls` (one class per letter). The gating
+  one `session.run`, output `gated_cls` (one class per letter) and
+  `gated_logits` (the distribution it is the argmax of). The gating
   math (argmax, compare, select) runs inside the graph
   ([§9.8](09-combining-models.md#98-stitching-an-ensemble-into-one-onnx-graph)).
 - `bilstm` (Zain Mahmood) adds Bahdanau (additive) attention after the
