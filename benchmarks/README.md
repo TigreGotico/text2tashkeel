@@ -39,26 +39,38 @@ corpus (train/test/val splits).
 
 | Pick | Model | DER | latency | size |
 |------|-------|----:|--------:|-----:|
-| best accuracy | `bilstm+libtashkeel+rawi` | 3.99% | 21 ms | 32 MB |
-| voice sweet spot | `libtashkeel+rawi-int8` | 4.13% | 7 ms | 7.3 MB |
-| best single | `bilstm` | 4.95% | 6.5 ms | 18 MB |
+| best accuracy (default) | `rawi-ensemble` | 2.03% | ~2 ms | 4.9 MB |
+| fastest and smallest | `rawi-v2-int8` | 2.30% | ~1 ms | 2.5 MB |
 
-`run_all_combos.py` writes `results_all_combos.txt`; `generate_plots.py` renders
-the plots into `docs/images/`. The gating strategy and rawi's over-marking property
-(high DER\*, best DER*) are covered in
+The `rawi-ensemble` row is the output of the command below, saved in
+`results_rawi_ensemble_fulltest.txt`. `parallel_benchmark.py --models ...`
+scores any other list of models the same way. `generate_plots.py` renders the
+plots into `docs/images/`. The gating strategy and rawi's over-marking property
+(high DER, best DER\*) are covered in
 [`../docs/09-combining-models.md`](../docs/09-combining-models.md).
 
-(External SOTA reference: [CATT](https://github.com/abjadai/catt), exported to
-ONNX — its EO variant scores ~4.1% DER, edging our best ensemble. See `docs/10` §10.5.)
+(External reference: [CATT](https://github.com/abjadai/catt), exported to
+ONNX. Its EO variant scores about 4.1% DER. See `docs/10` §10.5.)
 
 ## Reproduce
 
+The published `rawi-ensemble` number, on the full test split. It takes about
+65 minutes with 6 workers.
+
 ```bash
 pip install -e ".[bench]"
-python benchmarks/quantize.py                       # rebuild the int8 model
-python benchmarks/benchmark.py --limit 15000        # quick sample, all models
-python benchmarks/benchmark.py --limit -1 --splits test   # full split (slow on one core)
-# many cores (set BLAS threads to 1 — see script header):
+hf download TigreGotico/arabic_diacritized_text test.txt --repo-type dataset --local-dir .
 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 \
-    python benchmarks/parallel_benchmark.py --file test.txt --workers 12
+    python benchmarks/parallel_benchmark.py --file test.txt --models rawi-ensemble \
+    --workers 6 --out benchmarks/results_rawi_ensemble_fulltest.txt
 ```
+
+Expected: `rawi-ensemble     2.03%    2.94%   7.49%    49440772    10262193`.
+
+A quick sample on one core, every model:
+
+```bash
+python benchmarks/benchmark.py --limit 15000 --splits test
+```
+
+`python benchmarks/quantize.py` rebuilds the int8 bilstm model.

@@ -9,7 +9,7 @@ and `onnxruntime`.
 
 ```python
 from text2tashkeel import Diacritizer
-Diacritizer().diacritize("بسم الله الرحمن الرحيم")              # default model - 2.04% DER
+Diacritizer().diacritize("بسم الله الرحمن الرحيم")              # default model - 2.03% DER
 Diacritizer("rawi-v2-int8").diacritize("بسم الله الرحمن الرحيم")  # lean single model
 ```
 
@@ -46,7 +46,7 @@ Two models cover almost every use. Both ship in the wheel and run offline.
 
 | Use case | Model | DER ↓ | latency | size |
 |----------|-------|------:|--------:|-----:|
-| **best accuracy (default)** ⭐ | `rawi-ensemble` | **2.04%** | ~2 ms | 4.9 MB |
+| **best accuracy (default)** ⭐ | `rawi-ensemble` | **2.03%** | ~2 ms | 4.9 MB |
 | **fastest & smallest** | `rawi-v2-int8` | 2.30% | **~1 ms** | **2.5 MB** |
 
 22 model configurations are available for comparison, research, or special
@@ -94,7 +94,9 @@ text2tashkeel -m rawi-v2-int8 < input.txt > output.txt
 
 ## Benchmarks
 
-Measured DER/WER for every model across the corpus's train/test/val splits is in [`benchmarks/`](benchmarks/README.md).
+The `rawi-ensemble` DER is scored on the full held-out test split. The command
+that prints it is in [`benchmarks/README.md`](benchmarks/README.md#reproduce).
+The same page has the numbers for the other models.
 
 ## Related projects
 

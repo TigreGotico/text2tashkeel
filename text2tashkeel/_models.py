@@ -439,7 +439,7 @@ def _marks_of(text: str) -> np.ndarray:
 
 
 class _EnsembleBackend:
-    """Agreement-gated ensemble — the most accurate option (see
+    """Agreement-gated ensemble (see
     docs/09-combining-models.md).
 
     The models split the job by their strengths:
@@ -610,7 +610,7 @@ _REGISTRY = {
     "bilstm+libtashkeel+rawi": lambda p: _EnsembleBackend(["bilstm", "libtashkeel"], "rawi", "any", p),
     "bilstm+libtashkeel+rawi-int8": lambda p: _EnsembleBackend(["bilstm", "libtashkeel"], "rawi-int8", "any", p),
     # in-family gate: rawi-v2 decides WHERE (best calibrated), rawi-v1 decides WHICH
-    # (best per-marked accuracy). Beats rawi-v2 alone — the most accurate option.
+    # (best per-marked accuracy). Beats rawi-v2 alone.
     "rawi-v2+rawi": lambda p: _EnsembleBackend(["rawi-v2"], "rawi", "any", p),
     "rawi-v2+rawi-int8": lambda p: _EnsembleBackend(["rawi-v2"], "rawi-int8", "any", p),
     # fully-int8 combo — both models quantized (gate rawi-v2-int8, value rawi-int8);

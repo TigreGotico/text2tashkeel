@@ -6,7 +6,7 @@ bilstm, rawi, libtashkeel, + INT8 variants) and gated ensembles named
 `gate(+gate)+value` (e.g. rawi-v2+rawi, bilstm+libtashkeel+rawi).
 
     >>> from text2tashkeel import Diacritizer, available_models
-    >>> Diacritizer().diacritize("بسم الله الرحمن الرحيم")  # default rawi-ensemble (2.04% DER)
+    >>> Diacritizer().diacritize("بسم الله الرحمن الرحيم")  # default rawi-ensemble (2.03% DER)
     'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ'
     >>> Diacritizer("rawi-v2-int8").diacritize("بسم الله الرحمن الرحيم")  # lean single model
     'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ'
@@ -45,7 +45,7 @@ class Diacritizer:
 
     Args:
         model: a name from `available_models()`
-            (default ``"rawi-ensemble"`` — the flagship, 2.04% DER, single 4.9 MB ONNX).
+            (default ``"rawi-ensemble"`` — the flagship, 2.03% DER, single 4.9 MB ONNX).
         providers: onnxruntime execution providers
             (default ``["CPUExecutionProvider"]``).
         waqf: drop the case/mood endings (iʿrāb) from the result, leaving the
@@ -266,21 +266,21 @@ class BilstmInt8RawiInt8(Diacritizer):
 
 
 class BilstmLibtashkeelRawi(Diacritizer):
-    """Best accuracy: gate (bilstm OR libtashkeel) → value rawi. DER 3.99%,
+    """Gate (bilstm OR libtashkeel) → value rawi. DER 3.99%,
     ~12 sent/s (3 models). See docs/09."""
     def __init__(self, providers=None) -> None:
         super().__init__("bilstm+libtashkeel+rawi", providers)
 
 
 class BilstmLibtashkeelRawiInt8(Diacritizer):
-    """Best accuracy with the lossless int8 value — matches the fp32 best at a
+    """bilstm+libtashkeel+rawi with the lossless int8 value — matches the fp32 at a
     smaller footprint. Gate (bilstm OR libtashkeel) → value rawi-int8."""
     def __init__(self, providers=None) -> None:
         super().__init__("bilstm+libtashkeel+rawi-int8", providers)
 
 
 class RawiV2Rawi(Diacritizer):
-    """Most accurate: rawi-v2 gates WHERE, rawi-v1 picks WHICH mark. DER 2.19%
+    """rawi-v2 gates WHERE, rawi-v1 picks WHICH mark. DER 2.19%
     (full test), ~2 ms. Beats rawi-v2 alone. See docs/09 §9.11."""
     def __init__(self, providers=None) -> None:
         super().__init__("rawi-v2+rawi", providers)
@@ -314,6 +314,6 @@ class RawiV2Int8RawiV3Int8(Diacritizer):
 
 class RawiEnsemble(Diacritizer):
     """The flagship (default): rawi-v2+rawi-v3 as a single stitched ONNX — one
-    session.run, 4.9 MB, DER 2.04%. Same output as RawiV2Int8RawiV3Int8()."""
+    session.run, 4.9 MB, DER 2.03%. Same output as RawiV2Int8RawiV3Int8()."""
     def __init__(self, providers=None) -> None:
         super().__init__("rawi-ensemble", providers)

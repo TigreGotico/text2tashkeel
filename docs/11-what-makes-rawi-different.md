@@ -110,7 +110,7 @@ different forms:
 | rawi-v2 | one head, presence and value learned jointly, calibrated where and which | 2.29% |
 | `rawi-v2+rawi` | two models: V2 gates where, V1 supplies which | 2.19% |
 | rawi-v3 | one network, two heads: a binary presence head (where) plus a 75-class value head (which), over a shared BiLSTM | 3.07% (DER\* 2.92%, best which-mark of any model) |
-| `rawi-v2+rawi-v3` | V2 gates where, V3's value head supplies which (best which plus best where), stitched into one ONNX | 2.04% (DER\* 2.94%, WER 7.5%) |
+| `rawi-v2+rawi-v3` | V2 gates where, V3's value head supplies which (best which plus best where), stitched into one ONNX | 2.03% (DER\* 2.94%, WER 7.49%) |
 
 rawi (V1) is a value model: it excels at choosing the correct mark once a
 mark is warranted, but it over-marks, traceable to a one-line training bug
@@ -122,7 +122,7 @@ reaches 2.29% DER. rawi-v3 bakes the split into one architecture through
 two heads sharing an encoder, combined as `sigmoid(presence) > 0.5 ?
 value.argmax : no-mark`. Its value head sets the best DER\* (2.92%) of any
 model. The flagship `rawi-ensemble` pairs rawi-v2's where gate with
-rawi-v3's which head for 2.04% DER, the best overall result. rawi-v3's
+rawi-v3's which head for 2.03% DER, the best overall result. rawi-v3's
 learned presence gate does not match the calibration of an explicitly
 separate gate, so the two-model ensemble still leads.
 

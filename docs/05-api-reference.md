@@ -68,13 +68,13 @@ directly, and get autocomplete, instead of passing a string:
 | `RawiV2()` | `rawi-v2` | `BilstmInt8RawiInt8()` | `bilstm-int8+rawi-int8` |
 | `RawiV2Int8()` | `rawi-v2-int8` (lean single) | `BilstmLibtashkeelRawi()` | `bilstm+libtashkeel+rawi` |
 | `Libtashkeel()` | `libtashkeel` | `BilstmLibtashkeelRawiInt8()` | `bilstm+libtashkeel+rawi-int8` |
-| `RawiV2Rawi()` | `rawi-v2+rawi` (most accurate) | `RawiV2RawiInt8()` | `rawi-v2+rawi-int8` |
+| `RawiV2Rawi()` | `rawi-v2+rawi` | `RawiV2RawiInt8()` | `rawi-v2+rawi-int8` |
 | `RawiV2Int8RawiInt8()` | `rawi-v2-int8+rawi-int8` (fully int8) | `RawiV2RawiV3()` | `rawi-v2+rawi-v3` (flagship) |
 | `RawiV2Int8RawiV3Int8()` | `rawi-v2-int8+rawi-v3-int8` | `RawiEnsemble()` | `rawi-ensemble` (default, stitched) |
 
 ```python
 from text2tashkeel import RawiEnsemble, RawiV2Int8, Bilstm
-RawiEnsemble().diacritize("بسم الله الرحمن الرحيم")   # flagship default (2.04% DER)
+RawiEnsemble().diacritize("بسم الله الرحمن الرحيم")   # flagship default (2.03% DER)
 RawiV2Int8()("هذا كتاب مفيد")                          # lean single model (~1 ms, 2.5 MB)
 ```
 
