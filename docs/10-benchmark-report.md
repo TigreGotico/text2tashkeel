@@ -32,18 +32,26 @@ cores. Size is on-disk ONNX.
 | `rawi-v2-int8` | 2.30% | 3.39% | 8.36% | ~1 ms | 2.5 MB |
 | `rawi-v3-int8` | 3.04% | 2.93% | 11.89% | ~1 ms | 2.5 MB |
 | `rawi-v3` | 3.07% | 2.92% | 12.06% | ~1 ms | 9.8 MB |
-| `bilstm+libtashkeel+rawi` | 3.99% | 3.13% | 15.79% | 21 ms | 32.5 MB |
-| `bilstm+libtashkeel+rawi-int8` | 3.99% | 3.14% | 15.80% | 18 ms | 25.2 MB |
-| `libtashkeel+rawi` | 4.12% | 3.59% | 16.22% | 6.6 ms | 14.6 MB |
-| `libtashkeel+rawi-int8` | 4.13% | 3.59% | 16.23% | 7.0 ms | 7.3 MB |
-| `bilstm+rawi` | 4.38% | 4.17% | 16.72% | 8.6 ms | 27.7 MB |
-| `bilstm+rawi-int8` | 4.39% | 4.17% | 16.73% | 7.8 ms | 20.4 MB |
+| `bilstm+libtashkeel+rawi`† | 3.99% | 3.13% | 15.79% | 21 ms | 32.5 MB |
+| `bilstm+libtashkeel+rawi-int8`† | 3.99% | 3.14% | 15.80% | 18 ms | 25.2 MB |
+| `libtashkeel+rawi`† | 4.12% | 3.59% | 16.22% | 6.6 ms | 14.6 MB |
+| `libtashkeel+rawi-int8`† | 4.13% | 3.59% | 16.23% | 7.0 ms | 7.3 MB |
+| `bilstm+rawi`† | 4.38% | 4.17% | 16.72% | 8.6 ms | 27.7 MB |
+| `bilstm+rawi-int8`† | 4.39% | 4.17% | 16.73% | 7.8 ms | 20.4 MB |
 | `bilstm` | 4.95% | 5.08% | 18.02% | 6.5 ms | 17.9 MB |
 | `libtashkeel` | 6.89% | 7.80% | 24.56% | 3.3 ms | 4.8 MB |
-| `bilstm-int8+rawi-int8` | 10.00% | 13.68% | 30.11% | 8.7 ms | 7.0 MB |
+| `bilstm-int8+rawi-int8`† | 10.00% | 13.68% | 30.11% | 8.7 ms | 7.0 MB |
 | `bilstm-int8` | 12.89% | 18.42% | 37.54% | 5.5 ms | 4.5 MB |
 | `rawi` | 18.49% | 3.07% | 55.48% | 1.6 ms | 9.8 MB |
 | `rawi-int8` | 18.49% | 3.08% | 55.47% | 1.1 ms | 2.5 MB |
+
+† These seven rows come from
+[`results_all_combos.txt`](../benchmarks/results_all_combos.txt), which was
+measured before the constraint flags existed. These ensembles keep human
+marks and hamza or madda letters by default, and the scorer does not count
+restored hamza or madda. To score them with the constraint flags, give their
+names to `parallel_benchmark.py --models`, as in
+[`benchmarks/README.md`](../benchmarks/README.md#reproduce).
 
 `rawi-v2-int8` is the default single model. The flagship is
 `rawi-ensemble` (2.03%, 4.9 MB): rawi-v2-int8 gates where, and
@@ -78,9 +86,10 @@ the user-perceived response. On the Pareto frontier:
   trade-off to make here. It is simultaneously the most accurate and the
   cheapest point among standalone models. `rawi-v2` (fp32) has identical
   accuracy at 9.7 MB.
-- Other available options sit lower on the accuracy axis:
-  - `libtashkeel+rawi-int8`: 4.13% at 7 ms and 7.3 MB.
-  - `bilstm+libtashkeel+rawi`: 3.99%, but 21 ms and 32 MB.
+- Other available options sit lower on the accuracy axis. The numbers
+  marked † were measured before the constraint flags existed (§10.1).
+  - `libtashkeel+rawi-int8`: 4.13%† at 7 ms and 7.3 MB.
+  - `bilstm+libtashkeel+rawi`: 3.99%†, but 21 ms and 32 MB.
   - `bilstm` alone: 6.5 ms, 4.95%, a low-complexity floor.
   - `rawi`/`rawi-int8`: fastest but high DER (18%) when used alone,
     designed as ensemble value models.
@@ -94,8 +103,8 @@ faster than re-decoding, with byte-identical output.
 ![Accuracy vs size](images/der_vs_size.png)
 
 `libtashkeel+rawi-int8` sits on the frontier at this size point: 7.3 MB for
-4.13% DER. The INT8 value model (`rawi-int8`, lossless) is what shrinks the
-ensembles. See
+4.13% DER, measured before the constraint flags existed (§10.1). The INT8
+value model (`rawi-int8`, lossless) is what shrinks the ensembles. See
 [§8.4](08-models-and-benchmarks.md#quantization-is-architecture-dependent).
 
 ## 10.4 The over-marking and under-marking diagnostic
@@ -204,7 +213,7 @@ int8, +0.03% DER). Reproduce with
 | default, flagship | `rawi-ensemble` (2.03%, about 2 ms, 4.9 MB): v2 gates, v3 values, one stitched ONNX |
 | leaner single model | `rawi-v2-int8` (2.30%, about 1 ms, 2.5 MB) |
 | a non-V2 single model | `bilstm` (4.95%, 6.5 ms) |
-| the old ensemble frontier | `libtashkeel+rawi-int8` (4.13%) / `bilstm+libtashkeel+rawi` (3.99%) |
+| the old ensemble frontier | `libtashkeel+rawi-int8` (4.13%†) / `bilstm+libtashkeel+rawi` (3.99%†), measured before the constraint flags existed (§10.1) |
 
 ---
 [← Combining models](09-combining-models.md) · [Home](index.md) · [Next →](11-what-makes-rawi-different.md)

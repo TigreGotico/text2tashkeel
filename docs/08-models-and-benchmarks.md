@@ -133,8 +133,12 @@ INT8 dynamic quantization is not uniformly lossy. It depends on the model:
 
 | Model | fp32 → int8 DER | verdict |
 |-------|-----------------|---------|
-| `rawi` (plain BiLSTM, no attention) | 18.34% → 18.33% | lossless, and the ensemble with `rawi-int8` matches fp32 (3.99% full-test) |
+| `rawi` (plain BiLSTM, no attention) | 18.34% → 18.33% | lossless, and `bilstm+libtashkeel+rawi-int8` matches its fp32 twin (3.99% full-test†) |
 | `bilstm` (BiLSTM + attention) | 4.95% → 12.89% | lossy — attention matmuls are quant-sensitive |
+
+† Measured before the constraint flags existed. This ensemble keeps human
+marks and hamza or madda letters by default, and the scorer does not count
+restored hamza or madda.
 
 So `rawi-int8` is a free win, shrinking from 9.8 to 2.5 MB (use it as the
 ensemble's value model for a smaller footprint at no accuracy cost).

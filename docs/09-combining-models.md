@@ -115,7 +115,9 @@ marks both clean models agree are spurious (DER falls to 3.95%, WER to
 15.6%). That beats every standalone model on all three metrics, from
 existing weights and no training. On the full 817k split
 `bilstm+libtashkeel+rawi` scores DER 3.99%, DER\* 3.13%, WER 15.79%
-([§10](10-benchmark-report.md)).
+([§10](10-benchmark-report.md)). That row was measured before the constraint
+flags existed. The ensemble keeps human marks and hamza or madda letters
+by default, and the scorer does not count restored hamza or madda.
 
 Confidence thresholding on rawi's own softmax is a weaker alternative. It
 bottoms out around DER 11.8% (confidence about 0.9), because rawi's

@@ -110,7 +110,7 @@ different forms:
 | rawi-v2 | one head, presence and value learned jointly, calibrated where and which | 2.29% |
 | `rawi-v2+rawi` | two models: V2 gates where, V1 supplies which | 2.19% |
 | rawi-v3 | one network, two heads: a binary presence head (where) plus a 75-class value head (which), over a shared BiLSTM | 3.07% (DER\* 2.92%, best which-mark of any model) |
-| `rawi-v2+rawi-v3` | V2 gates where, V3's value head supplies which (best which plus best where), stitched into one ONNX | 2.03% (DER\* 2.94%, WER 7.49%) |
+| `rawi-ensemble` | V2 gates where, V3's value head supplies which (best which plus best where), int8, stitched into one ONNX | 2.03% (DER\* 2.94%, WER 7.49%) |
 
 rawi (V1) is a value model: it excels at choosing the correct mark once a
 mark is warranted, but it over-marks, traceable to a one-line training bug

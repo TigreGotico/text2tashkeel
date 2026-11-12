@@ -633,8 +633,9 @@ _REGISTRY = {
     # tools/build_ensemble_v2v3_onnx.py). Here it composes the two bundled models.
     "rawi-v2+rawi-v3": lambda p: _EnsembleBackend(["rawi-v2"], "rawi-v3", "any", p),
     "rawi-v2-int8+rawi-v3-int8": lambda p: _EnsembleBackend(["rawi-v2-int8"], "rawi-v3-int8", "any", p),
-    # flagship as a single stitched ONNX (one session.run) — the default. Same
-    # output as rawi-v2-int8+rawi-v3-int8, in one 4.9 MB file.
+    # flagship as a single stitched ONNX (one session.run) — the default. The
+    # same two models as rawi-v2-int8+rawi-v3-int8, in one 4.9 MB file. The
+    # outputs differ on some input: DER 2.03% here, 2.04% composed.
     "rawi-ensemble": lambda p: _StitchedEnsembleBackend(
         _model_path("rawi_ensemble.int8.onnx"), _model_path("rawi_v2.vocab.json"), p
     ),
