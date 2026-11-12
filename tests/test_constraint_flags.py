@@ -5,6 +5,8 @@ decode without the orthography constraints. Before this rule they accepted the
 flags and ignored them, so ``respect_existing=True`` still overwrote a human's
 kasra on كِتاب.
 """
+import unicodedata
+
 import pytest
 
 from text2tashkeel import Diacritizer
@@ -35,3 +37,32 @@ def test_flag_on_a_model_that_honours_it_is_applied(model):
     d = Diacritizer(model, preserve_orthography=True, respect_existing=True)
     assert d.diacritize("آبد").startswith("آ")
     assert d.diacritize("كِتاب").startswith("كِ")
+
+
+GATED_BY_BILSTM_OR_LIBTASHKEEL = [
+    "bilstm+rawi", "bilstm+rawi-int8", "bilstm-int8+rawi-int8",
+    "libtashkeel+rawi", "libtashkeel+rawi-int8",
+    "bilstm+libtashkeel+rawi", "bilstm+libtashkeel+rawi-int8",
+]
+
+
+def _written(text):
+    """(base character, set of combining marks on it), by Unicode decomposition."""
+    pairs = []
+    for c in unicodedata.normalize("NFD", text):
+        if unicodedata.category(c) == "Mn":
+            pairs[-1][1].add(c)
+        else:
+            pairs.append((c, set()))
+    return pairs
+
+
+@pytest.mark.parametrize("text", ["آبد القُرآن مُحَمَّد", "ذهب الوَلد"])
+@pytest.mark.parametrize("model", GATED_BY_BILSTM_OR_LIBTASHKEEL)
+def test_gate_keeps_the_marks_the_writing_fixed(model, text):
+    # Every madda and every human mark in the source is in the output, unchanged.
+    d = Diacritizer(model, preserve_orthography=True, respect_existing=True)
+    src, out = _written(text), _written(d.diacritize(text))
+    assert [b for b, _ in out] == [b for b, _ in src]
+    expected = [(i, marks) for i, (_, marks) in enumerate(src) if marks]
+    assert [(i, out[i][1]) for i, _ in expected] == expected

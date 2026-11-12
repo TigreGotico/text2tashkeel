@@ -488,6 +488,17 @@ class _EnsembleBackend:
             gate = masks[0].copy()
             for m in masks[1:]:
                 gate = gate | m if self.combine == "any" else gate & m
+        if gate is not None and hasattr(self.value, "preserve_orthography"):
+            # The value model's constraints already fixed the positions the
+            # writing decided. A gate that says "no mark" there would delete a
+            # human's tashkeel or a madda, so those positions pass every gate.
+            from text2tashkeel.orthography import source_marks
+            src_bare, src_marks = source_marks(text, _RawiBackend._normalize)
+            if src_bare == bare:
+                for i, marks in enumerate(src_marks):
+                    if ((self.value.respect_existing and marks - _ORTHO_MARKS)
+                            or (self.value.preserve_orthography and marks & _ORTHO_MARKS)):
+                        gate[i] = True
         out = []
         for i, (ch, c) in enumerate(zip(bare, cls)):
             if unicodedata.category(ch).startswith("L"):
