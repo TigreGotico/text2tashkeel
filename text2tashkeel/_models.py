@@ -16,6 +16,7 @@ Every backend exposes `.diacritize(text) -> str`.
 
 from __future__ import annotations
 
+import copy
 import json
 import os
 import unicodedata
@@ -722,6 +723,11 @@ def _apply_constraints(backend, preserve_orthography, respect_existing,
     them there is what makes the ensemble honour them too — the constraint rides
     with the decision, not with the wrapper.
     """
+    if isinstance(backend, _EnsembleBackend):
+        # Its gates and value model come from the shared cache. Copies carry the
+        # constraints; the ONNX sessions stay shared.
+        backend.value = copy.copy(backend.value)
+        backend.gates = [copy.copy(g) for g in backend.gates]
     for b in (backend, getattr(backend, "value", None), *getattr(backend, "gates", ())):
         if b is None or not hasattr(b, "preserve_orthography"):
             continue

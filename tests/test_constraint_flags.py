@@ -66,3 +66,12 @@ def test_gate_keeps_the_marks_the_writing_fixed(model, text):
     assert [b for b, _ in out] == [b for b, _ in src]
     expected = [(i, marks) for i, (_, marks) in enumerate(src) if marks]
     assert [(i, out[i][1]) for i, _ in expected] == expected
+
+
+def test_ensemble_flags_leave_the_shared_models_alone():
+    # Turning a constraint off on one ensemble must not turn it off for every
+    # other caller of the same value model.
+    text = "كِتاب"
+    Diacritizer("bilstm-int8+rawi-int8", respect_existing=False)
+    out = Diacritizer("rawi-int8").diacritize(text)
+    assert _written(out)[0] == _written(text)[0]
