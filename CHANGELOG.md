@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.1a1](https://github.com/TigreGotico/text2tashkeel/tree/0.3.1a1) (2026-11-12)
+
+[Full Changelog](https://github.com/TigreGotico/text2tashkeel/compare/0.3.0a2...0.3.1a1)
+
+**Merged pull requests:**
+
+- fix: strip benchmark input, flagship CLI default, refuse ignored flags [\#13](https://github.com/TigreGotico/text2tashkeel/pull/13) ([JarbasAl](https://github.com/JarbasAl))
+
 ## [0.3.0a2](https://github.com/TigreGotico/text2tashkeel/tree/0.3.0a2) (2026-07-30)
 
 [Full Changelog](https://github.com/TigreGotico/text2tashkeel/compare/0.3.0a1...0.3.0a2)
@@ -23,6 +31,14 @@
 **Merged pull requests:**
 
 - feat: waqf mode — drop the iʿrāb, leaving the form that is spoken [\#7](https://github.com/TigreGotico/text2tashkeel/pull/7) ([JarbasAl](https://github.com/JarbasAl))
+
+## [0.1.0](https://github.com/TigreGotico/text2tashkeel/tree/0.1.0) (2026-06-07)
+
+[Full Changelog](https://github.com/TigreGotico/text2tashkeel/compare/0.1.0a2...0.1.0)
+
+## [0.1.0a2](https://github.com/TigreGotico/text2tashkeel/tree/0.1.0a2) (2026-06-07)
+
+[Full Changelog](https://github.com/TigreGotico/text2tashkeel/compare/67698d9fd75869ba2a494bf687d7723475453c5d...0.1.0a2)
 
 
 
