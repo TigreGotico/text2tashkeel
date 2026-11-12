@@ -16,6 +16,7 @@ Every backend exposes `.diacritize(text) -> str`.
 
 from __future__ import annotations
 
+import copy
 import json
 import os
 import unicodedata
@@ -488,6 +489,17 @@ class _EnsembleBackend:
             gate = masks[0].copy()
             for m in masks[1:]:
                 gate = gate | m if self.combine == "any" else gate & m
+        if gate is not None and hasattr(self.value, "preserve_orthography"):
+            # The value model's constraints already fixed the positions the
+            # writing decided. A gate that says "no mark" there would delete a
+            # human's tashkeel or a madda, so those positions pass every gate.
+            from text2tashkeel.orthography import source_marks
+            src_bare, src_marks = source_marks(text, _RawiBackend._normalize)
+            if src_bare == bare:
+                for i, marks in enumerate(src_marks):
+                    if ((self.value.respect_existing and marks - _ORTHO_MARKS)
+                            or (self.value.preserve_orthography and marks & _ORTHO_MARKS)):
+                        gate[i] = True
         out = []
         for i, (ch, c) in enumerate(zip(bare, cls)):
             if unicodedata.category(ch).startswith("L"):
@@ -711,6 +723,11 @@ def _apply_constraints(backend, preserve_orthography, respect_existing,
     them there is what makes the ensemble honour them too — the constraint rides
     with the decision, not with the wrapper.
     """
+    if isinstance(backend, _EnsembleBackend):
+        # Its gates and value model come from the shared cache. Copies carry the
+        # constraints; the ONNX sessions stay shared.
+        backend.value = copy.copy(backend.value)
+        backend.gates = [copy.copy(g) for g in backend.gates]
     for b in (backend, getattr(backend, "value", None), *getattr(backend, "gates", ())):
         if b is None or not hasattr(b, "preserve_orthography"):
             continue
@@ -721,19 +738,40 @@ def _apply_constraints(backend, preserve_orthography, respect_existing,
 
 
 def build_backend(model: str, providers=None, *,
-                  preserve_orthography: bool = True,
-                  respect_existing: bool = True,
-                  allow_restoration: bool = True):
+                  preserve_orthography: bool | None = None,
+                  respect_existing: bool | None = None,
+                  allow_restoration: bool | None = None):
     """Build (or fetch from cache) the backend for *model*.
+
+    A constraint left at ``None`` takes the model's own behaviour: on, for the
+    models that support it. Setting one on a model whose decoder cannot honour
+    it raises :class:`ValueError`, because a silently ignored flag gives the
+    caller a result they did not ask for.
 
     Backends are cached and shared, so a caller asking for non-default
     constraints gets a **fresh, unshared** instance — mutating a shared one would
     silently change every other caller's decoder.
     """
-    constraints = (preserve_orthography, respect_existing, allow_restoration)
+    shared = _build(model, tuple(providers) if providers else None)
+    requested = {
+        "preserve_orthography": preserve_orthography,
+        "respect_existing": respect_existing,
+        "allow_restoration": allow_restoration,
+    }
+    flags = [name for name, value in requested.items() if value is not None]
+    if not flags:
+        return shared
+    # An ensemble's value model chooses the class, so it is the one that must
+    # honour the constraints.
+    decider = shared.value if isinstance(shared, _EnsembleBackend) else shared
+    if not hasattr(decider, "preserve_orthography"):
+        raise ValueError(
+            f"model {model!r} ignores {', '.join(flags)}; these constraints need "
+            f"a model that decodes with them: rawi, rawi-v2, rawi-ensemble, their "
+            f"INT8 variants, or an ensemble whose value model is one of them"
+        )
+    constraints = tuple(True if v is None else v for v in requested.values())
     if constraints == _DEFAULT_CONSTRAINTS:
-        return _build(model, tuple(providers) if providers else None)
-    if model not in _REGISTRY:
-        raise ValueError(f"unknown model {model!r}; choose from {available_models()}")
+        return shared
     fresh = _REGISTRY[model](list(providers) if providers else None)
     return _apply_constraints(fresh, *constraints)

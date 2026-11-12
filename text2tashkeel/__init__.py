@@ -71,8 +71,14 @@ class Diacritizer:
             a written mark is always wrong, adding one to a silent letter is the
             job. On by default.
 
+    The three constraints apply to the models that decode with them: ``rawi``,
+    ``rawi-v2``, ``rawi-ensemble``, their INT8 variants, and the ensembles whose
+    value model is one of them. Left at ``None``, a constraint is on where the
+    model supports it. Set on any other model, it raises :class:`ValueError`.
+
     The onnxruntime session is built lazily on first use, so constructing a
-    ``Diacritizer`` is cheap. Process **one sentence per call** — see
+    ``Diacritizer`` is cheap. A constraint set explicitly builds the session at
+    once, to check the model honours it. Process **one sentence per call** — see
     docs/04-inference-pipeline.md on why padded batching is unsafe.
     """
 
@@ -81,9 +87,9 @@ class Diacritizer:
         model: str = DEFAULT_MODEL,
         providers=None,
         waqf: bool = False,
-        preserve_orthography: bool = True,
-        respect_existing: bool = True,
-        allow_restoration: bool = True,
+        preserve_orthography: bool | None = None,
+        respect_existing: bool | None = None,
+        allow_restoration: bool | None = None,
     ) -> None:
         if model not in available_models():
             raise ValueError(f"unknown model {model!r}; choose from {available_models()}")
@@ -94,6 +100,14 @@ class Diacritizer:
         self.allow_restoration = allow_restoration
         self._providers = providers
         self._backend = None
+        if (preserve_orthography, respect_existing, allow_restoration) != (None, None, None):
+            # Built now, so a model that ignores a constraint raises here.
+            self._backend = build_backend(
+                model, providers,
+                preserve_orthography=preserve_orthography,
+                respect_existing=respect_existing,
+                allow_restoration=allow_restoration,
+            )
 
     @property
     def backend(self):
