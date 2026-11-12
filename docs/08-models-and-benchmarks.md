@@ -50,14 +50,14 @@ The rawi family:
 - `rawi-v3` has a two-head architecture (presence head decides where, value
   head decides which). Its value head reaches 2.92% DER\*.
 - `rawi-ensemble` is the flagship and default: rawi-v2 gates, rawi-v3
-  values, one stitched ONNX, scoring 2.04% DER and 7.5% WER. See
+  values, one stitched ONNX, scoring 2.03% DER and 7.49% WER. See
   [§9.6](09-combining-models.md#96-the-rawi-family-and-the-flagship) for
   the full family picture.
 
 ```python
 from text2tashkeel import Diacritizer, available_models
 available_models()                       # the current set; grows over time
-Diacritizer().diacritize("بسم الله الرحمن الرحيم")              # default rawi-ensemble (2.04%)
+Diacritizer().diacritize("بسم الله الرحمن الرحيم")              # default rawi-ensemble (2.03%)
 Diacritizer("rawi-v2-int8").diacritize("بسم الله الرحمن الرحيم")  # lean single model
 ```
 
@@ -122,7 +122,7 @@ wrong.
 The full 16-model table, with accuracy, latency, and size on the entire
 817k-sentence test split, is in the
 [benchmark report (§10)](10-benchmark-report.md), with Pareto plots.
-Headline: the default `rawi-ensemble` (2.04% DER, about 2 ms, 4.9 MB single
+Headline: the default `rawi-ensemble` (2.03% DER, about 2 ms, 4.9 MB single
 stitched ONNX) is the flagship. `rawi-v2-int8` (2.30%, about 1 ms, 2.5 MB)
 is the lean single-model option. Re-read section 8.2 before interpreting
 these numbers. The rest of this page covers two cross-cutting findings.

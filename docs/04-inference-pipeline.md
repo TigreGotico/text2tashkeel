@@ -92,7 +92,7 @@ per-model numbers.
 
 ```python
 from text2tashkeel import Diacritizer
-Diacritizer()                  # rawi-ensemble — INT8, 2.04% DER, the default
+Diacritizer()                  # rawi-ensemble — INT8, 2.03% DER, the default
 Diacritizer("rawi-v2-int8")    # lean single INT8 model
 ```
 

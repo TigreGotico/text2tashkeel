@@ -3,9 +3,12 @@
 Every bundled model and gated combination is scored on the entire held-out
 test split (817,035 sentences, about 49 million characters, of
 [`TigreGotico/arabic_diacritized_text`](https://huggingface.co/datasets/TigreGotico/arabic_diacritized_text)),
-with accuracy, latency, and size side by side. Reproduce with
-[`benchmarks/run_all_combos.py`](../benchmarks/run_all_combos.py) (DER) and
-[`benchmarks/generate_plots.py`](../benchmarks/generate_plots.py) (plots).
+with accuracy, latency, and size side by side. The `rawi-ensemble` row comes
+from the command in
+[`benchmarks/README.md`](../benchmarks/README.md#reproduce), which writes
+[`results_rawi_ensemble_fulltest.txt`](../benchmarks/results_rawi_ensemble_fulltest.txt).
+The other rows come from the `results_*.txt` files in `benchmarks/`.
+[`benchmarks/generate_plots.py`](../benchmarks/generate_plots.py) draws the plots.
 
 Read [§8.2](08-models-and-benchmarks.md#82-the-contamination-caveat-read-this-before-the-numbers)
 first. The corpus overlaps the models' training data, so absolute DER is
@@ -21,7 +24,7 @@ cores. Size is on-disk ONNX.
 | Model | DER ↓ | DER\* ↓ | WER ↓ | latency ↓ | size |
 |-------|------:|-------:|------:|----------:|-----:|
 | `rawi-v2+rawi-v3` | 2.03% | 2.93% | 7.47% | ~2 ms | 19.5 MB |
-| `rawi-v2-int8+rawi-v3-int8` | 2.04% | 2.94% | 7.51% | ~2 ms | 4.9 MB |
+| `rawi-ensemble` | 2.03% | 2.94% | 7.49% | ~2 ms | 4.9 MB |
 | `rawi-v2+rawi` | 2.19% | 3.20% | 8.02% | ~2 ms | 19.5 MB |
 | `rawi-v2-int8+rawi-int8` | 2.20% | 3.21% | 8.04% | ~2 ms | 5.0 MB |
 | `rawi-v2+rawi-int8` | 2.20% | 3.21% | 8.04% | ~2 ms | 12.2 MB |
@@ -43,7 +46,7 @@ cores. Size is on-disk ONNX.
 | `rawi-int8` | 18.49% | 3.08% | 55.47% | 1.1 ms | 2.5 MB |
 
 `rawi-v2-int8` is the default single model. The flagship is
-`rawi-v2-int8+rawi-v3-int8` (2.04%, 4.9 MB): rawi-v2 gates where, and
+`rawi-ensemble` (2.03%, 4.9 MB): rawi-v2-int8 gates where, and
 rawi-v3's value head supplies which (its DER\* of 2.93% is the best of any
 single model). Because v2 and v3 share a vocabulary, it ships as a single
 stitched ONNX
@@ -198,7 +201,7 @@ int8, +0.03% DER). Reproduce with
 
 | If you want... | use |
 |--------------|-----|
-| default, flagship | `rawi-ensemble` (2.04%, about 2 ms, 4.9 MB): v2 gates, v3 values, one stitched ONNX |
+| default, flagship | `rawi-ensemble` (2.03%, about 2 ms, 4.9 MB): v2 gates, v3 values, one stitched ONNX |
 | leaner single model | `rawi-v2-int8` (2.30%, about 1 ms, 2.5 MB) |
 | a non-V2 single model | `bilstm` (4.95%, 6.5 ms) |
 | the old ensemble frontier | `libtashkeel+rawi-int8` (4.13%) / `bilstm+libtashkeel+rawi` (3.99%) |

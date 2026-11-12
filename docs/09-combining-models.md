@@ -158,7 +158,7 @@ accurate models combine them. On the full 817k test split:
 | `rawi-v3` | 3.07% | 2.92% | 12.06% | two-head, value head is best which |
 | `rawi-v2+rawi` | 2.19% | 3.20% | 8.02% | V2 gates, V1 values |
 | `rawi-v2+rawi-v3` | 2.03% | 2.93% | 7.47% | V2 gates, V3 values |
-| `rawi-v2-int8+rawi-v3-int8` | 2.04% | 2.94% | 7.51% | the flagship, int8 |
+| `rawi-ensemble` | 2.03% | 2.94% | 7.49% | the flagship, int8, one stitched ONNX |
 
 `rawi-v2` applies the one-line fix from
 [§9.3](#93-why-rawi-v1-over-marks): padding gets its own index, so the
@@ -187,7 +187,7 @@ ships as the default `rawi-ensemble`
 
 About 60.5% of base characters in this data carry a mark, so a perfect
 gate over a value model with rawi-v3's DER\* would reach roughly 2.92% x
-0.605, about 1.86% DER (all). The flagship at 2.04% is close to that
+0.605, about 1.86% DER (all). The flagship at 2.03% is close to that
 ceiling, leaving the remaining headroom in the where decision.
 
 ## 9.7 Using the ensembles
