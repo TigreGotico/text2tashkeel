@@ -75,3 +75,11 @@ def test_ensemble_flags_leave_the_shared_models_alone():
     Diacritizer("bilstm-int8+rawi-int8", respect_existing=False)
     out = Diacritizer("rawi-int8").diacritize(text)
     assert _written(out)[0] == _written(text)[0]
+
+
+def test_ensemble_flags_leave_the_shared_gate_alone():
+    # A rawi gate carries the constraints too, so it needs its own copy.
+    text = "كِتاب"
+    Diacritizer("rawi-v2-int8+rawi-int8", respect_existing=False)
+    out = Diacritizer("rawi-v2-int8").diacritize(text)
+    assert _written(out)[0] == _written(text)[0]

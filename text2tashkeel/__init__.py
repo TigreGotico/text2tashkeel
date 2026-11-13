@@ -250,7 +250,9 @@ class Libtashkeel(Diacritizer):
 
 # gated ensembles (gate decides WHERE, value decides WHICH mark)
 class BilstmRawi(Diacritizer):
-    """Gate bilstm → value rawi. DER 4.38%."""
+    """Gate bilstm → value rawi. DER 4.38%, measured before the constraint
+    flags existed. It keeps human marks and hamza or madda letters by
+    default, and the scorer does not count restored hamza or madda."""
     def __init__(self, providers=None) -> None:
         super().__init__("bilstm+rawi", providers)
 
@@ -262,7 +264,9 @@ class BilstmRawiInt8(Diacritizer):
 
 
 class LibtashkeelRawi(Diacritizer):
-    """Gate libtashkeel → value rawi. DER 4.12%."""
+    """Gate libtashkeel → value rawi. DER 4.12%, measured before the constraint
+    flags existed. It keeps human marks and hamza or madda letters by
+    default, and the scorer does not count restored hamza or madda."""
     def __init__(self, providers=None) -> None:
         super().__init__("libtashkeel+rawi", providers)
 
@@ -281,7 +285,9 @@ class BilstmInt8RawiInt8(Diacritizer):
 
 class BilstmLibtashkeelRawi(Diacritizer):
     """Gate (bilstm OR libtashkeel) → value rawi. DER 3.99%,
-    ~12 sent/s (3 models). See docs/09."""
+    ~12 sent/s (3 models). See docs/09. The DER was measured before the
+    constraint flags existed. It keeps human marks and hamza or madda
+    letters by default, and the scorer does not count restored hamza or madda."""
     def __init__(self, providers=None) -> None:
         super().__init__("bilstm+libtashkeel+rawi", providers)
 
@@ -295,13 +301,15 @@ class BilstmLibtashkeelRawiInt8(Diacritizer):
 
 class RawiV2Rawi(Diacritizer):
     """rawi-v2 gates WHERE, rawi-v1 picks WHICH mark. DER 2.19%
-    (full test), ~2 ms. Beats rawi-v2 alone. See docs/09 §9.11."""
+    (full test, measured before the constraint flags existed), ~2 ms. Beats
+    rawi-v2 alone. See docs/09 §9.11."""
     def __init__(self, providers=None) -> None:
         super().__init__("rawi-v2+rawi", providers)
 
 
 class RawiV2RawiInt8(Diacritizer):
-    """Same combo with the lossless int8 value (rawi-int8). DER 2.20%, smaller."""
+    """Same combo with the lossless int8 value (rawi-int8). DER 2.20%, measured
+    before the constraint flags existed. Smaller."""
     def __init__(self, providers=None) -> None:
         super().__init__("rawi-v2+rawi-int8", providers)
 
@@ -328,6 +336,12 @@ class RawiV2Int8RawiV3Int8(Diacritizer):
 
 class RawiEnsemble(Diacritizer):
     """The flagship (default): rawi-v2+rawi-v3 as a single stitched ONNX — one
-    session.run, 4.9 MB, DER 2.03%. Same output as RawiV2Int8RawiV3Int8()."""
+    session.run, 4.9 MB, DER 2.03%. RawiV2Int8RawiV3Int8() runs the same two
+    int8 models as two sessions (DER 2.04%†). With the constraints off, the two
+    give the same output. With the default constraints they differ on some
+    input, because the composed rawi-v2-int8 gate decodes under the
+    constraints and the gate inside the stitched ONNX does not.
+
+    † Measured before the constraint flags existed."""
     def __init__(self, providers=None) -> None:
         super().__init__("rawi-ensemble", providers)
