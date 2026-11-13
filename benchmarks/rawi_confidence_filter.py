@@ -119,7 +119,7 @@ class RawiFiltered:
 def evaluate(model, lines):
     agg = [0] * 6
     for gold in lines:
-        for i, v in enumerate(score(model.diacritize(gold), gold)):
+        for i, v in enumerate(score(model.diacritize(_strip(gold)), gold)):
             agg[i] += v
     dw, dt, mw, mt, ww, wt = agg
     return dw / dt, mw / mt, ww / wt
