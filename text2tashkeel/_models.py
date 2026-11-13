@@ -516,8 +516,11 @@ class _EnsembleBackend:
 class _StitchedEnsembleBackend:
     """The flagship gated ensemble as ONE ONNX graph: rawi-v2 gates WHERE and
     rawi-v3's value head supplies WHICH, with the gating math folded in (see
-    tools/build_ensemble_v2v3_onnx.py). One `session.run` instead of two — byte-
-    identical to the `rawi-v2+rawi-v3` Python ensemble. Input = NFD-bare char ids;
+    tools/build_ensemble_v2v3_onnx.py). One `session.run` instead of two. With
+    the constraints off, the output equals the Python ensemble of the same
+    models. With the default constraints it differs, because the Python
+    ensemble's gate decodes under the constraints and the gate inside this
+    graph does not. Input = NFD-bare char ids;
     output `gated_cls` = one diacritic-class id per position (0 = no mark)."""
 
     def __init__(self, onnx_path: Path, vocab_path: Path, providers=None,
@@ -634,8 +637,10 @@ _REGISTRY = {
     "rawi-v2+rawi-v3": lambda p: _EnsembleBackend(["rawi-v2"], "rawi-v3", "any", p),
     "rawi-v2-int8+rawi-v3-int8": lambda p: _EnsembleBackend(["rawi-v2-int8"], "rawi-v3-int8", "any", p),
     # flagship as a single stitched ONNX (one session.run) — the default. The
-    # same two models as rawi-v2-int8+rawi-v3-int8, in one 4.9 MB file. The
-    # outputs differ on some input: DER 2.03% here, 2.04% composed.
+    # same two models as rawi-v2-int8+rawi-v3-int8, in one 4.9 MB file: DER
+    # 2.03% here, 2.04%† composed († measured before the constraint flags
+    # existed). The outputs differ only under the default constraints: the
+    # composed gate decodes under them, and the stitched gate does not.
     "rawi-ensemble": lambda p: _StitchedEnsembleBackend(
         _model_path("rawi_ensemble.int8.onnx"), _model_path("rawi_v2.vocab.json"), p
     ),

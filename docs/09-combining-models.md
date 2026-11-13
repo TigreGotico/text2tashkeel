@@ -104,10 +104,13 @@ Using bilstm and/or libtashkeel as gates over the rawi (V1) value model
 |--------|-----------|----------------|-----|
 | bilstm (reference) | 4.83% | 4.93% | 17.73% |
 | rawi (raw) | 18.43% | 3.06% | 55.29% |
-| gate = bilstm | 4.31% | 4.08% | 16.46% |
-| gate = libtashkeel | 4.10% | 3.57% | 16.04% |
-| gate = bilstm AND libtashkeel | 4.46% | 4.54% | 17.05% |
-| gate = bilstm OR libtashkeel | 3.95% | 3.11% | 15.61% |
+| gate = bilstm† | 4.31% | 4.08% | 16.46% |
+| gate = libtashkeel† | 4.10% | 3.57% | 16.04% |
+| gate = bilstm AND libtashkeel† | 4.46% | 4.54% | 17.05% |
+| gate = bilstm OR libtashkeel† | 3.95% | 3.11% | 15.61% |
+
+† Measured on a test sample by the script's own gating, before the
+constraint flags existed.
 
 The OR gate is best. It is permissive, so it keeps almost all of rawi's
 marks (DER\* stays at 3.11%, near rawi's raw 3.06%), and it drops only the
@@ -158,9 +161,12 @@ accurate models combine them. On the full 817k test split:
 | `rawi` (V1) | 18.49% | 3.07% | 55.48% | value model (best which, over-marks) |
 | `rawi-v2` | 2.29% | 3.37% | 8.33% | calibrated single model |
 | `rawi-v3` | 3.07% | 2.92% | 12.06% | two-head, value head is best which |
-| `rawi-v2+rawi` | 2.19% | 3.20% | 8.02% | V2 gates, V1 values |
-| `rawi-v2+rawi-v3` | 2.03% | 2.93% | 7.47% | V2 gates, V3 values |
+| `rawi-v2+rawi`† | 2.19% | 3.20% | 8.02% | V2 gates, V1 values |
+| `rawi-v2+rawi-v3`† | 2.03% | 2.93% | 7.47% | V2 gates, V3 values |
 | `rawi-ensemble` | 2.03% | 2.94% | 7.49% | the flagship, int8, one stitched ONNX |
+
+† Measured before the constraint flags existed
+([§10.1](10-benchmark-report.md#101-the-table)).
 
 `rawi-v2` applies the one-line fix from
 [§9.3](#93-why-rawi-v1-over-marks): padding gets its own index, so the
@@ -177,13 +183,16 @@ predictor, while its presence head alone is a weaker gate than rawi-v2's,
 so standalone it trails V2.
 
 The flagship pairs them by their strengths: rawi-v2 gates where, and
-rawi-v3's value head supplies which, reaching 2.03% DER and 7.47% WER, the
+rawi-v3's value head supplies which, reaching 2.03% DER and 7.47% WER†, the
 best in the package. INT8 is lossless here (attention-free LSTMs), so
 `rawi-v2-int8+rawi-v3-int8` matches it at a smaller footprint. Because
 rawi-v2 and rawi-v3 share one vocabulary, this pairing stitches into a
 single ONNX graph
 ([`tools/build_ensemble_v2v3_onnx.py`](../tools/build_ensemble_v2v3_onnx.py)):
-one input, one `session.run`, byte-identical to the Python ensemble. It
+one input, one `session.run`. With the constraints off, its output is
+identical to the Python ensemble. With the default constraints, the two differ
+on 116 of 3,000 `val.txt` lines. The Python ensemble's rawi-v2 gate decodes
+under the constraints, and the gate inside the stitched graph does not. It
 ships as the default `rawi-ensemble`
 (`TigreGotico/rawi-ensemble`, fp32 19.5 MB / int8 4.9 MB).
 
@@ -227,8 +236,9 @@ input → [ rawi-v3 → value head → argmax ] ──────────�
 ```
 
 [`tools/build_ensemble_v2v3_onnx.py`](../tools/build_ensemble_v2v3_onnx.py)
-builds both fp32 and int8 forms. Each is verified byte-identical to the
-Python ensemble. A two-vocab pairing (for example `bilstm+rawi`) also
+builds both fp32 and int8 forms. With the constraints off, each gives the
+same output as the Python ensemble. With the default constraints, the outputs
+differ ([§9.6](#96-the-rawi-family-and-the-flagship)). A two-vocab pairing (for example `bilstm+rawi`) also
 merges, but takes two id inputs
 ([`tools/build_merged_onnx.py`](../tools/build_merged_onnx.py)).
 

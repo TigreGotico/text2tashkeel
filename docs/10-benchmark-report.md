@@ -23,11 +23,11 @@ cores. Size is on-disk ONNX.
 
 | Model | DER ↓ | DER\* ↓ | WER ↓ | latency ↓ | size |
 |-------|------:|-------:|------:|----------:|-----:|
-| `rawi-v2+rawi-v3` | 2.03% | 2.93% | 7.47% | ~2 ms | 19.5 MB |
+| `rawi-v2+rawi-v3`† | 2.03% | 2.93% | 7.47% | ~2 ms | 19.5 MB |
 | `rawi-ensemble` | 2.03% | 2.94% | 7.49% | ~2 ms | 4.9 MB |
-| `rawi-v2+rawi` | 2.19% | 3.20% | 8.02% | ~2 ms | 19.5 MB |
-| `rawi-v2-int8+rawi-int8` | 2.20% | 3.21% | 8.04% | ~2 ms | 5.0 MB |
-| `rawi-v2+rawi-int8` | 2.20% | 3.21% | 8.04% | ~2 ms | 12.2 MB |
+| `rawi-v2+rawi`† | 2.19% | 3.20% | 8.02% | ~2 ms | 19.5 MB |
+| `rawi-v2-int8+rawi-int8`† | 2.20% | 3.21% | 8.04% | ~2 ms | 5.0 MB |
+| `rawi-v2+rawi-int8`† | 2.20% | 3.21% | 8.04% | ~2 ms | 12.2 MB |
 | `rawi-v2` | 2.29% | 3.37% | 8.33% | ~1 ms | 9.7 MB |
 | `rawi-v2-int8` | 2.30% | 3.39% | 8.36% | ~1 ms | 2.5 MB |
 | `rawi-v3-int8` | 3.04% | 2.93% | 11.89% | ~1 ms | 2.5 MB |
@@ -45,11 +45,13 @@ cores. Size is on-disk ONNX.
 | `rawi` | 18.49% | 3.07% | 55.48% | 1.6 ms | 9.8 MB |
 | `rawi-int8` | 18.49% | 3.08% | 55.47% | 1.1 ms | 2.5 MB |
 
-† These seven rows come from
-[`results_all_combos.txt`](../benchmarks/results_all_combos.txt), which was
-measured before the constraint flags existed. These ensembles keep human
-marks and hamza or madda letters by default, and the scorer does not count
-restored hamza or madda. To score them with the constraint flags, give their
+† These eleven rows were measured before the constraint flags existed. The
+seven bilstm- or libtashkeel-gated rows come from
+[`results_all_combos.txt`](../benchmarks/results_all_combos.txt). The four
+rawi-gated rows come from `results_v2_gate_fulltest.txt`,
+`results_fullint8_fulltest.txt` and `results_v3value_fulltest.txt`. These
+ensembles keep human marks and hamza or madda letters by default, and the
+scorer does not count restored hamza or madda. To score them with the constraint flags, give their
 names to `parallel_benchmark.py --models`, as in
 [`benchmarks/README.md`](../benchmarks/README.md#reproduce).
 
