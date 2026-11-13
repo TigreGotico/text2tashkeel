@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.1a3](https://github.com/TigreGotico/text2tashkeel/tree/0.3.1a3) (2026-11-13)
+
+[Full Changelog](https://github.com/TigreGotico/text2tashkeel/compare/0.3.1a2...0.3.1a3)
+
+**Merged pull requests:**
+
+- docs: mark the pre-constraint ensemble rows and test the shared gate copy [\#18](https://github.com/TigreGotico/text2tashkeel/pull/18) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.3.1a2](https://github.com/TigreGotico/text2tashkeel/tree/0.3.1a2) (2026-11-12)
 
 [Full Changelog](https://github.com/TigreGotico/text2tashkeel/compare/0.3.1a1...0.3.1a2)
