@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.0a1](https://github.com/TigreGotico/text2tashkeel/tree/1.0.0a1) (2026-11-25)
+
+[Full Changelog](https://github.com/TigreGotico/text2tashkeel/compare/0.3.1a3...1.0.0a1)
+
+**Breaking changes:**
+
+- refactor!: drop the per-model wrapper classes [\#20](https://github.com/TigreGotico/text2tashkeel/pull/20) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
+**Merged pull requests:**
+
+- docs: short README; install, models and CLI move to docs [\#21](https://github.com/TigreGotico/text2tashkeel/pull/21) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [0.3.1a3](https://github.com/TigreGotico/text2tashkeel/tree/0.3.1a3) (2026-11-13)
 
 [Full Changelog](https://github.com/TigreGotico/text2tashkeel/compare/0.3.1a2...0.3.1a3)
