@@ -1,8 +1,8 @@
 # Changelog
 
-## [1.0.0a1](https://github.com/TigreGotico/text2tashkeel/tree/1.0.0a1) (2026-11-25)
+## [1.0.0a2](https://github.com/TigreGotico/text2tashkeel/tree/1.0.0a2) (2026-11-25)
 
-[Full Changelog](https://github.com/TigreGotico/text2tashkeel/compare/0.3.1a3...1.0.0a1)
+[Full Changelog](https://github.com/TigreGotico/text2tashkeel/compare/0.3.1a3...1.0.0a2)
 
 **Breaking changes:**
 
