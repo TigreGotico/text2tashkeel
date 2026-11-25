@@ -32,13 +32,13 @@ def draw(fig, theme):
     ax = fig.subplots()
     y = range(len(rows))
     h = 0.38
-    ax.barh([i + h / 2 for i in y], [r[1] for r in rows], h, label="DER, all positions (where + which)",
+    ax.barh([i - h / 2 for i in y], [r[1] for r in rows], h, label="DER, all positions (where + which)",
             color=theme["series"][0])
-    ax.barh([i - h / 2 for i in y], [r[2] for r in rows], h, label="DER*, marked positions (which)",
+    ax.barh([i + h / 2 for i in y], [r[2] for r in rows], h, label="DER*, marked positions (which)",
             color=theme["series"][1])
     for i, r in zip(y, rows):
-        ax.text(r[1] + 0.2, i + h / 2, f"{r[1]:.2f}", va="center", fontsize=8, color=theme["text"])
-        ax.text(r[2] + 0.2, i - h / 2, f"{r[2]:.2f}", va="center", fontsize=8, color=theme["text"])
+        ax.text(r[1] + 0.2, i - h / 2, f"{r[1]:.2f}", va="center", fontsize=8, color=theme["text"])
+        ax.text(r[2] + 0.2, i + h / 2, f"{r[2]:.2f}", va="center", fontsize=8, color=theme["text"])
     ax.set_yticks(list(y), [r[0] for r in rows])
     ax.invert_yaxis()
     ax.set_xlabel("error rate (%), lower is better")
