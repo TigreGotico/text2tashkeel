@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.0a5](https://github.com/TigreGotico/text2tashkeel/tree/1.0.0a5) (2026-11-25)
+
+[Full Changelog](https://github.com/TigreGotico/text2tashkeel/compare/1.0.0a4...1.0.0a5)
+
+**Merged pull requests:**
+
+- docs: where/which bars in legend order [\#27](https://github.com/TigreGotico/text2tashkeel/pull/27) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [1.0.0a4](https://github.com/TigreGotico/text2tashkeel/tree/1.0.0a4) (2026-11-25)
 
 [Full Changelog](https://github.com/TigreGotico/text2tashkeel/compare/1.0.0a3...1.0.0a4)
