@@ -1,4 +1,24 @@
-# text2tashkeel — documentation
+# text2tashkeel documentation
+
+text2tashkeel puts the missing vowel marks back into Arabic text, offline, with small ONNX models.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/where-which-dark.svg">
+  <img alt="Diacritic error rate on the full test split: rawi-ensemble 2.03 %, the lowest; rawi V1 18.49 % on all positions but 3.07 % on marked positions." src="images/where-which.svg">
+</picture>
+
+`images/plot_where_which.py` makes this figure from `benchmarks/results_*.txt`.
+
+## Quickstart
+
+```bash
+pip install --pre text2tashkeel
+```
+
+```python
+from text2tashkeel import Diacritizer
+Diacritizer().diacritize("بسم الله الرحمن الرحيم")   # 'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ'
+```
 
 This is a guide to Arabic diacritization and the lightweight, multi-model
 toolkit that does it. It assumes no Arabic knowledge. Every Arabic example is
@@ -14,7 +34,7 @@ internet connection required.
 
 ```
 Input :  كتب محمد              ("ktb mhmd"   — bare consonants)
-Output:  كَتَبَ مُحَمَّدٌ        ("kataba muhammadun" — "Muhammad wrote")
+Correct: كَتَبَ مُحَمَّدٌ        ("kataba muhammadun" — "Muhammad wrote")
 ```
 
 This task is called diacritization, or tashkeel (تشكيل) in Arabic. That is
