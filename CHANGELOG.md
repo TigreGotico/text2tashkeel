@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.0a4](https://github.com/TigreGotico/text2tashkeel/tree/1.0.0a4) (2026-11-25)
+
+[Full Changelog](https://github.com/TigreGotico/text2tashkeel/compare/1.0.0a3...1.0.0a4)
+
+**Merged pull requests:**
+
+- docs: where/which plot, index quickstart [\#23](https://github.com/TigreGotico/text2tashkeel/pull/23) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [1.0.0a3](https://github.com/TigreGotico/text2tashkeel/tree/1.0.0a3) (2026-11-25)
 
 [Full Changelog](https://github.com/TigreGotico/text2tashkeel/compare/1.0.0a2...1.0.0a3)
@@ -71,14 +79,6 @@
 **Merged pull requests:**
 
 - feat: waqf mode — drop the iʿrāb, leaving the form that is spoken [\#7](https://github.com/TigreGotico/text2tashkeel/pull/7) ([JarbasAl](https://github.com/JarbasAl))
-
-## [0.1.0](https://github.com/TigreGotico/text2tashkeel/tree/0.1.0) (2026-06-07)
-
-[Full Changelog](https://github.com/TigreGotico/text2tashkeel/compare/0.1.0a2...0.1.0)
-
-## [0.1.0a2](https://github.com/TigreGotico/text2tashkeel/tree/0.1.0a2) (2026-06-07)
-
-[Full Changelog](https://github.com/TigreGotico/text2tashkeel/compare/67698d9fd75869ba2a494bf687d7723475453c5d...0.1.0a2)
 
 
 
