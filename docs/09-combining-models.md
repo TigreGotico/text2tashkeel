@@ -156,6 +156,13 @@ for that sentence.
 The rawi line provides both halves of the gate/value split, and the most
 accurate models combine them. On the full 817k test split:
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="images/where-which-dark.svg">
+  <img alt="rawi V1 has 18.49 % DER on all positions but 3.07 % on marked positions; the rawi-v2 gate brings the ensemble to 2.03 % DER." src="images/where-which.svg">
+</picture>
+
+`images/plot_where_which.py` makes this figure from `benchmarks/results_*.txt`.
+
 | model | DER (all) | DER\* (marked) | WER | role |
 |-------|----------:|---------------:|----:|------|
 | `rawi` (V1) | 18.49% | 3.07% | 55.48% | value model (best which, over-marks) |
