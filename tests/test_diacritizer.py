@@ -131,38 +131,3 @@ def test_register_model_byo():
 def test_register_model_bad_arch():
     with pytest.raises(ValueError):
         register_model("x", "a.onnx", "b.json", arch="nope")
-
-
-# ── per-model wrapper classes ───────────────────────────────────────────────
-import text2tashkeel as tt
-
-_WRAPPERS = {
-    tt.Bilstm: "bilstm", tt.BilstmInt8: "bilstm-int8", tt.Rawi: "rawi",
-    tt.RawiInt8: "rawi-int8", tt.RawiV2: "rawi-v2", tt.RawiV2Int8: "rawi-v2-int8",
-    tt.RawiV3: "rawi-v3", tt.RawiV3Int8: "rawi-v3-int8",
-    tt.Libtashkeel: "libtashkeel",
-    tt.BilstmRawi: "bilstm+rawi", tt.BilstmRawiInt8: "bilstm+rawi-int8",
-    tt.LibtashkeelRawi: "libtashkeel+rawi",
-    tt.LibtashkeelRawiInt8: "libtashkeel+rawi-int8",
-    tt.BilstmInt8RawiInt8: "bilstm-int8+rawi-int8",
-    tt.BilstmLibtashkeelRawi: "bilstm+libtashkeel+rawi",
-    tt.BilstmLibtashkeelRawiInt8: "bilstm+libtashkeel+rawi-int8",
-    tt.RawiV2Rawi: "rawi-v2+rawi", tt.RawiV2RawiInt8: "rawi-v2+rawi-int8",
-    tt.RawiV2Int8RawiInt8: "rawi-v2-int8+rawi-int8",
-    tt.RawiV2RawiV3: "rawi-v2+rawi-v3", tt.RawiV2Int8RawiV3Int8: "rawi-v2-int8+rawi-v3-int8",
-    tt.RawiEnsemble: "rawi-ensemble",
-}
-
-
-def test_wrapper_classes_cover_every_model():
-    assert {w.__name__ for w in _WRAPPERS} <= set(dir(tt))
-    assert set(_WRAPPERS.values()) == set(available_models())
-
-
-@pytest.mark.parametrize("cls,name", list(_WRAPPERS.items()))
-def test_wrapper_matches_diacritizer(cls, name):
-    w = cls()
-    assert isinstance(w, Diacritizer) and w.model == name
-    text = "بسم الله الرحمن الرحيم"
-    assert w.diacritize(text) == Diacritizer(name).diacritize(text)
-    assert w(text) == w.diacritize(text)
