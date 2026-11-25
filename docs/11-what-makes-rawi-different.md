@@ -174,4 +174,4 @@ that a separate where-signal beats joint learning, all while staying small
 enough to quantize losslessly and run below a millisecond before TTS.
 
 ---
-[← Full benchmark report](10-benchmark-report.md) · [Home](index.md)
+[← Full benchmark report](10-benchmark-report.md) · [Home](index.md) · [Next →](12-install-models-cli.md)

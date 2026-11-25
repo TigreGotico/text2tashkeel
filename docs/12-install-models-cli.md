@@ -78,4 +78,4 @@ text2tashkeel -m rawi-v2-int8 < input.txt > output.txt
 
 ---
 
-[Index](index.md)
+[← What makes rawi different](11-what-makes-rawi-different.md) · [Home](index.md)
