@@ -64,3 +64,27 @@ def test_example_prints_its_comment(page, blocks):
                 line = f"_check({expr}, {want!r}, {expr!r})"
             lines.append(line)
         exec(compile("\n".join(lines), page, "exec"), namespace)  # noqa: S102 - runs the docs examples
+
+
+def _results():
+    """model → every (DER, DER*, WER) triple in benchmarks/results_*.txt, as printed."""
+    rows = {}
+    for path in (ROOT / "benchmarks").glob("results_*.txt"):
+        for line in path.read_text(encoding="utf-8").splitlines():
+            m = re.match(r"(\S+)\s+([0-9.]+)%\s+([0-9.]+)%\s+([0-9.]+)%", line)
+            if m:
+                rows.setdefault(m[1], set()).add((m[2], m[3], m[4]))
+    return rows
+
+
+def test_benchmark_table_cells_come_from_results():
+    results = _results()
+    checked = 0
+    for page in DOCS:
+        for line in page.read_text(encoding="utf-8").splitlines():
+            m = re.match(r"\| `([^`]+)`†? \| ([0-9.]+)% \| ([0-9.]+)% \| ([0-9.]+)% \|", line)
+            if m:
+                checked += 1
+                assert (m[2], m[3], m[4]) in results.get(m[1], set()), \
+                    f"{page.name}: {m[1]} {m[2]}/{m[3]}/{m[4]} is not a row of benchmarks/results_*.txt"
+    assert checked >= 21
