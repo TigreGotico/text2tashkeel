@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.0a6](https://github.com/TigreGotico/text2tashkeel/tree/1.0.0a6) (2026-11-26)
+
+[Full Changelog](https://github.com/TigreGotico/text2tashkeel/compare/1.0.0a5...1.0.0a6)
+
+**Merged pull requests:**
+
+- test\(docs\): figure data and example output checked against the code [\#30](https://github.com/TigreGotico/text2tashkeel/pull/30) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [1.0.0a5](https://github.com/TigreGotico/text2tashkeel/tree/1.0.0a5) (2026-11-25)
 
 [Full Changelog](https://github.com/TigreGotico/text2tashkeel/compare/1.0.0a4...1.0.0a5)
