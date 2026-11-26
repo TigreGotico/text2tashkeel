@@ -1,12 +1,19 @@
 # Changelog
 
+## [1.0.0a8](https://github.com/TigreGotico/text2tashkeel/tree/1.0.0a8) (2026-11-26)
+
+[Full Changelog](https://github.com/TigreGotico/text2tashkeel/compare/1.0.0a7...1.0.0a8)
+
+**Merged pull requests:**
+
+- test\(docs\): table sizes checked against the model files [\#32](https://github.com/TigreGotico/text2tashkeel/pull/32) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [1.0.0a7](https://github.com/TigreGotico/text2tashkeel/tree/1.0.0a7) (2026-11-26)
 
 [Full Changelog](https://github.com/TigreGotico/text2tashkeel/compare/1.0.0a6...1.0.0a7)
 
 **Merged pull requests:**
 
-- test\(docs\): table sizes checked against the model files [\#32](https://github.com/TigreGotico/text2tashkeel/pull/32) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 - test\(docs\): benchmark table cells checked against the result files [\#31](https://github.com/TigreGotico/text2tashkeel/pull/31) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
 
 ## [1.0.0a6](https://github.com/TigreGotico/text2tashkeel/tree/1.0.0a6) (2026-11-26)
