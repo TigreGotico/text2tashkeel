@@ -17,16 +17,19 @@ dependable part.
 
 ## 10.1 The table
 
-DER/DER\*/WER are full-split. Latency is single-thread milliseconds per
-sentence on about 58-character input, and scales roughly linearly with
-cores. Size is on-disk ONNX.
+DER/DER\*/WER are full-split. Size is the on-disk size of the ONNX files, in
+MB (10^6 bytes); a combination adds up its models. Latency is single-thread
+milliseconds per sentence on about 58-character input. It depends on the CPU,
+and the CPU of these runs is not recorded, so compare the rows with each other
+only. To measure on your machine, run
+`TT_ORT_THREADS=1 python benchmarks/bench_latency.py`.
 
 | Model | DER ↓ | DER\* ↓ | WER ↓ | latency ↓ | size |
 |-------|------:|-------:|------:|----------:|-----:|
 | `rawi-v2+rawi-v3`† | 2.03% | 2.93% | 7.47% | ~2 ms | 19.5 MB |
 | `rawi-ensemble` | 2.03% | 2.94% | 7.49% | ~2 ms | 4.9 MB |
 | `rawi-v2+rawi`† | 2.19% | 3.20% | 8.02% | ~2 ms | 19.5 MB |
-| `rawi-v2-int8+rawi-int8`† | 2.20% | 3.21% | 8.04% | ~2 ms | 5.0 MB |
+| `rawi-v2-int8+rawi-int8`† | 2.20% | 3.21% | 8.04% | ~2 ms | 4.9 MB |
 | `rawi-v2+rawi-int8`† | 2.20% | 3.21% | 8.04% | ~2 ms | 12.2 MB |
 | `rawi-v2` | 2.29% | 3.37% | 8.33% | ~1 ms | 9.7 MB |
 | `rawi-v2-int8` | 2.30% | 3.39% | 8.36% | ~1 ms | 2.5 MB |
