@@ -25,10 +25,11 @@ def row(model, fname):
     raise ValueError(f"{model} not in {fname}")
 
 
-rows = [(m, *row(m, f)) for m, f in SOURCES.items()]
+data = {m: list(row(m, f)) for m, f in SOURCES.items()}
 
 
-def draw(fig, theme):
+def draw(fig, theme, data):
+    rows = [(m, *v) for m, v in data.items()]
     ax = fig.subplots()
     y = range(len(rows))
     h = 0.38
@@ -45,4 +46,4 @@ def draw(fig, theme):
     ax.legend(loc="lower right")
 
 
-save(str(Path(__file__).parent / "where-which"), draw)
+save(str(Path(__file__).parent / "where-which"), draw, data)

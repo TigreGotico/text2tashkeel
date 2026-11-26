@@ -85,7 +85,7 @@ itself.
 ```python
 from text2tashkeel import Diacritizer
 d = Diacritizer()
-d.diacritize("نص عربي")     # 'نَصٌ عَرَبِيٌّ'
+d.diacritize("نص عربي")     # 'نَصَّ عَرَبِي'
 d("نص عربي")                # __call__ is an alias for .diacritize
 ```
 

@@ -216,8 +216,7 @@ list and numbers are in [§10](10-benchmark-report.md).
 
 ```python
 from text2tashkeel import Diacritizer
-Diacritizer().diacritize("العلم نور والجهل ظلام")              # flagship rawi-ensemble
-# الْعِلْمُ نُورٌ وَالْجَهْلُ ظَلَامٌ
+Diacritizer().diacritize("العلم نور والجهل ظلام")  # 'العِلْمُ نُورٌ وَالجَهْلُ ظَلَامُ'
 Diacritizer("rawi-v2+rawi-v3").diacritize("بسم الله الرحمن الرحيم")  # same combo, two sessions
 Diacritizer("bilstm+libtashkeel+rawi").diacritize("هذا كتاب مفيد")  # bilstm/libtashkeel-gated
 ```
