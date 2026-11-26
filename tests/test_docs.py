@@ -88,3 +88,24 @@ def test_benchmark_table_cells_come_from_results():
                 assert (m[2], m[3], m[4]) in results.get(m[1], set()), \
                     f"{page.name}: {m[1]} {m[2]}/{m[3]}/{m[4]} is not a row of benchmarks/results_*.txt"
     assert checked >= 21
+
+
+def _model_bytes(name):
+    """On-disk bytes of one model name; a combination adds up its parts."""
+    total = 0
+    for part in name.split("+"):
+        stem = "rawi_ensemble.int8" if part == "rawi-ensemble" else (
+            part.removesuffix("-int8").replace("-", "_") + (".int8" if part.endswith("-int8") else ""))
+        total += (ROOT / "text2tashkeel" / "models" / f"{stem}.onnx").stat().st_size
+    return total
+
+
+def test_benchmark_table_sizes_are_the_model_files():
+    checked = 0
+    for page in DOCS:
+        for line in page.read_text(encoding="utf-8").splitlines():
+            m = re.match(r"\| `([^`]+)`†? \|.*\| ([0-9.]+) MB \|$", line)
+            if m:
+                checked += 1
+                assert f"{_model_bytes(m[1]) / 1e6:.1f}" == m[2], f"{page.name}: {m[1]} is not {m[2]} MB on disk"
+    assert checked >= 21
