@@ -71,6 +71,7 @@ shape but differ in vocabulary, labels, and normalization.
 | 10 | [Full benchmark report](10-benchmark-report.md) | All models on the full test set: accuracy, latency, and size, with Pareto plots. The voice-pipeline picker. |
 | 11 | [What makes rawi different](11-what-makes-rawi-different.md) | rawi's distinctive features: a wider task (it restores the hamza and dagger-alef) and a where/which factorization, not a fancy network. |
 | 12 | [Install, models and CLI](12-install-models-cli.md) | Install options, the bundled models, custom models with `register_model`, and the command line. |
+| 13 | [Run rawi-ensemble in loom](13-loom-export.md) | Export rawi-ensemble to a loom GGUF, build the host program, and check it against the ONNX models. |
 
 ## Try it in 30 seconds
 
