@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0a1](https://github.com/TigreGotico/text2tashkeel/tree/1.1.0a1) (2026-11-27)
+
+[Full Changelog](https://github.com/TigreGotico/text2tashkeel/compare/1.0.0a8...1.1.0a1)
+
+**Merged pull requests:**
+
+- feat\(tools\): export rawi-ensemble to a loom GGUF, with a host harness and a parity check [\#36](https://github.com/TigreGotico/text2tashkeel/pull/36) ([openvoiceos-bot](https://github.com/openvoiceos-bot))
+
 ## [1.0.0a8](https://github.com/TigreGotico/text2tashkeel/tree/1.0.0a8) (2026-11-26)
 
 [Full Changelog](https://github.com/TigreGotico/text2tashkeel/compare/1.0.0a7...1.0.0a8)
