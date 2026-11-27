@@ -29,7 +29,7 @@ for s in sentences:
 print(
     "Notes (numbers in docs/10-benchmark-report.md):\n"
     " - 'rawi-ensemble' is the default and most accurate: rawi-v2 decides where a\n"
-    "   mark goes, rawi-v3's value head decides which, in one stitched ONNX (2.04% DER).\n"
+    "   mark goes, rawi-v3's value head decides which, in one stitched ONNX (2.03% DER).\n"
     " - 'rawi-v2-int8' is the lean single model (2.30% DER, ~1 ms, 2.5 MB).\n"
     " - 'rawi' (V1) chooses the right mark best but over-marks on its own — a one-line\n"
     "   training bug (docs/09 §9.3); it serves as an ensemble value model.\n"

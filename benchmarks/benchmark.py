@@ -115,7 +115,7 @@ def run_split(split: str, models: dict, limit: int, max_len: int) -> dict:
             continue
         for name, model in models.items():   # sequential: less ORT/GIL contention
             s = stats[name]
-            for k, v in zip(keys, score(model.diacritize(gold), gold)):
+            for k, v in zip(keys, score(model.diacritize(_strip(gold)), gold)):
                 s[k] += v
         n += 1
         if n % 2000 == 0:

@@ -91,7 +91,7 @@ def _work(chunk):
             continue
         for name, d in _MODELS.items():
             s = stats[name]
-            for k, v in zip(_KEYS, score(d.diacritize(gold), gold)):
+            for k, v in zip(_KEYS, score(d.diacritize(_strip(gold)), gold)):
                 s[k] += v
         n += 1
     return n, stats
