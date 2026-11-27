@@ -13,14 +13,17 @@ import argparse
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
 
 import coremltools as ct
 import numpy as np
 import torch
-import torch.nn as nn
 from huggingface_hub import hf_hub_download
-from loom_exporter.multi_phase_export import BaseMultiPhaseModelExportConfig, ExportPhase, RecurrentPhase
+from loom_exporter.multi_phase_export import (
+    BaseMultiPhaseModelExportConfig,
+    ExportPhase,
+    RecurrentPhase,
+)
+from torch import nn
 
 HERE = Path(__file__).parent
 MAX_LEN = 4096
@@ -74,9 +77,9 @@ class _Head(nn.Module):
 
 @dataclass(kw_only=True)
 class RawiEnsembleExportConfig(BaseMultiPhaseModelExportConfig):
-    architecture: Optional[str] = "rawi-ensemble"
+    architecture: str | None = "rawi-ensemble"
     driver_script_path: Path = HERE
-    _models: Optional[dict] = field(default=None, init=False, repr=False)
+    _models: dict | None = field(default=None, init=False, repr=False)
 
     def load_model(self):
         self._models = load_members()
@@ -109,7 +112,13 @@ class RawiEnsembleExportConfig(BaseMultiPhaseModelExportConfig):
 
     def driver_components(self):
         from loom_exporter.driver_components import (
-            CALLER, BiRecurrentCall, DriverInputs, DriverReturn, LuaFragment, SubgraphCallComponent)
+            CALLER,
+            BiRecurrentCall,
+            DriverInputs,
+            DriverReturn,
+            LuaFragment,
+            SubgraphCallComponent,
+        )
         from loom_exporter.driver_ir import Len, OutputRef, Var
         n = Len(Var("tokens"))
         comps = [DriverInputs(bindings=(("tokens", CALLER),), n_tokens=n)]

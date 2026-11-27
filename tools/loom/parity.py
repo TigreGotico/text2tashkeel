@@ -22,7 +22,7 @@ import onnxruntime as ort
 from huggingface_hub import hf_hub_download
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from benchmarks.benchmark import split_lines  # noqa: E402
+from benchmarks.benchmark import split_lines
 
 N_CLASSES = 75
 
