@@ -37,6 +37,8 @@ hf = ["huggingface_hub>=0.20"]
 test = ["pytest>=7.0", "huggingface_hub>=0.20"]
 bench = ["datasets>=2.0", "matplotlib>=3.5", "huggingface_hub>=0.20"]
 dev = ["pytest>=7.0", "datasets>=2.0", "matplotlib>=3.5", "huggingface_hub>=0.20"]
+# tools/loom: also needs loom-exporter from its checkout (pip install -e <loom-exporter>)
+loom = ["torch", "coremltools>=8", "gguf>=0.17", "huggingface_hub>=0.20", "onnxruntime"]
 
 [project.urls]
 Homepage = "https://github.com/TigreGotico/text2tashkeel"
